@@ -2,6 +2,8 @@ package com.dylabs.zuko.service;
 
 import com.dylabs.zuko.dto.request.GenreRequest;
 import com.dylabs.zuko.dto.response.GenreResponse;
+import com.dylabs.zuko.exception.GenreAlreadyExistsException;
+import com.dylabs.zuko.exception.GenreNotFoundException;
 import com.dylabs.zuko.model.Genre;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +23,7 @@ public class GenreService {
     public GenreResponse createGenre(GenreRequest request) {
         boolean exists = genres.stream().anyMatch(g->g.getName().equalsIgnoreCase(request.name()));
         if (exists) {
-            return null;
+            throw new GenreAlreadyExistsException("El genero " + request.name() + " ya está registrado");
         }
 
         Genre newGenre = new Genre(
@@ -39,11 +41,11 @@ public class GenreService {
     /// Editar un género
 
     public GenreResponse updateGenre(long id, GenreRequest request) {
-        Genre genre = genres.stream().filter(g->g.getId() == id).findFirst().orElse( null);
-        if (genre == null) { return null; }
+        Genre genre = genres.stream().filter(g->g.getId() == id).findFirst().
+                orElseThrow(() -> new GenreNotFoundException("El género con id " + id + "no  existe"));
         boolean exists = genres.stream().anyMatch(g -> g.getId() !=id && g.getName().equalsIgnoreCase(request.name()));
         if (exists) {
-            return null;
+            throw new GenreAlreadyExistsException("El genero " + request.name() + " ya está registrado");
         }
         genre.setName(request.name());
         genre.setDescription(request.description());
