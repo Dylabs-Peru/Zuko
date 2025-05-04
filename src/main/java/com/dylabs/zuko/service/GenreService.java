@@ -1,6 +1,6 @@
 package com.dylabs.zuko.service;
 
-import com.dylabs.zuko.dto.GenreRequest;
+import com.dylabs.zuko.dto.request.GenreRequest;
 import com.dylabs.zuko.model.Genre;
 import org.springframework.stereotype.Service;
 
