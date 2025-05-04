@@ -1,64 +1,53 @@
 package com.dylabs.zuko.service;
 
 import com.dylabs.zuko.dto.request.GenreRequest;
+import com.dylabs.zuko.dto.response.GenreResponse;
 import com.dylabs.zuko.model.Genre;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class GenreService {
     private List<Genre> genres = new ArrayList<Genre>();
     private long nextId = 1L;
 
+    private GenreResponse toResponse(Genre genre){
+        return new GenreResponse(genre.getId(), genre.getName(), genre.getDescription());
+    }
     /// Registrar genero
-    public Genre createGenre(GenreRequest request) {
+    public GenreResponse createGenre(GenreRequest request) {
         boolean exists = genres.stream().anyMatch(g->g.getName().equalsIgnoreCase(request.name()));
         if (exists) {
             return null;
         }
-        boolean name_length_validation = request.name().length() < 3;
-        boolean description_validation = request.description() != null && request.description().length() > 200;
 
-        if (name_length_validation) {
-            return null;
-        }
-        if (description_validation) {
-            return null;
-        }
-        Genre newgenre = new Genre(
+        Genre newGenre = new Genre(
                 nextId++, request.name(), request.description()
         );
-        genres.add(newgenre);
-        return newgenre;
+        genres.add(newGenre);
+        return toResponse(newGenre);
     }
 
     /// Listar todos los géneros
-    public List<Genre> getGenres() {
-        return genres;
+    public List<GenreResponse> getGenres() {
+        return genres.stream().map(this::toResponse).toList();
     }
 
     /// Editar un género
 
-    public Genre updateGenre(long id, GenreRequest request) {
+    public GenreResponse updateGenre(long id, GenreRequest request) {
         Genre genre = genres.stream().filter(g->g.getId() == id).findFirst().orElse( null);
-        if (genre != null) {
-            if (request.name() == null || request.name().length() < 3) {
-                return null;
-            }
-            boolean exists = genres.stream().anyMatch(g -> g.getId() !=id && g.getName().equalsIgnoreCase(request.name()));
-            if (exists) {
-                return null;
-            }
-            if (request.description() != null && request.description().length() > 200) {
-                return null;
-            }
-            genre.setName(request.name());
-            genre.setDescription(request.description());
-            return genre;
+        if (genre == null) { return null; }
+        boolean exists = genres.stream().anyMatch(g -> g.getId() !=id && g.getName().equalsIgnoreCase(request.name()));
+        if (exists) {
+            return null;
         }
-        else return null;
+        genre.setName(request.name());
+        genre.setDescription(request.description());
+        return toResponse(genre);
     }
 
 
