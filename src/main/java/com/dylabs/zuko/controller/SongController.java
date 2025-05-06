@@ -26,4 +26,9 @@ public class SongController {
         SongResponse response = songService.updateSong(id, request);
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/{id}")
+    public SongResponse deleteSong(@PathVariable Long id) {
+        return songService.deleteSong(id);
+    }
 }

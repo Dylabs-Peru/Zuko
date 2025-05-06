@@ -51,6 +51,7 @@ public class SongService {
         }
     }
 
+    /// Editar canción
     public SongResponse updateSong(Long id, SongRequest request) {
         Song song = repository.findById(id)
                 .orElseThrow(() -> new SongNotFoundException("Canción no encontrada"));
@@ -72,6 +73,25 @@ public class SongService {
                 updatedSong.isPublicSong(),
                 updatedSong.getReleaseDate(),
                 "La canción ha sido actualizada correctamente."
+        );
+    }
+
+    /// Eliminar canción
+    public SongResponse deleteSong(Long id) {
+        // Buscar la canción por id
+        Song song = repository.findById(id)
+                .orElseThrow(() -> new SongNotFoundException("La canción no se encontró en tu catálogo."));
+
+        // Eliminar la canción
+        repository.delete(song);
+
+        // Crear y devolver la respuesta
+        return new SongResponse(
+                song.getId(),
+                song.getTitle(),
+                song.isPublicSong(),
+                song.getReleaseDate(),
+                "La canción " + song.getTitle() + " ha sido eliminada exitosamente."
         );
     }
 }
