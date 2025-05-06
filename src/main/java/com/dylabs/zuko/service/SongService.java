@@ -3,6 +3,7 @@ package com.dylabs.zuko.service;
 import com.dylabs.zuko.dto.request.SongRequest;
 import com.dylabs.zuko.dto.response.SongResponse;
 import com.dylabs.zuko.exception.SongAlreadyExistException;
+import com.dylabs.zuko.exception.SongNotFoundException;
 import com.dylabs.zuko.mapper.SongMapper;
 import com.dylabs.zuko.model.Song;
 import com.dylabs.zuko.repository.SongRepository;
@@ -48,5 +49,29 @@ public class SongService {
         if (request.title().length() <= 3) {
             throw new IllegalArgumentException("El título debe tener más de 3 caracteres.");
         }
+    }
+
+    public SongResponse updateSong(Long id, SongRequest request) {
+        Song song = repository.findById(id)
+                .orElseThrow(() -> new SongNotFoundException("Canción no encontrada"));
+
+        // Verificar si el nuevo título ya existe
+        boolean exists = repository.existsByTitleIgnoreCase(request.title());
+        if (exists) {
+            throw new SongAlreadyExistException("El título " + request.title() + " ya existe en tu catálogo.");
+        }
+
+        song.setTitle(request.title());
+        song.setPublicSong(request.isPublicSong());
+
+        Song updatedSong = repository.save(song);
+
+        return new SongResponse(
+                updatedSong.getId(),
+                updatedSong.getTitle(),
+                updatedSong.isPublicSong(),
+                updatedSong.getReleaseDate(),
+                "La canción ha sido actualizada correctamente."
+        );
     }
 }
