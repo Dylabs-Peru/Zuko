@@ -23,7 +23,7 @@ public class UserMapper {
     }
 
     // Convertir CreateUserRequest a User (para crear un usuario)
-    public User toEntity(CreateUserRequest request) {
+    public User toUserEntity(CreateUserRequest request) {
         if (request == null) return null;
         return User.builder()
                 .username(request.username())
