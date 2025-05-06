@@ -11,4 +11,5 @@ public interface RoleRepository extends JpaRepository<Role,Long> {
     Optional<Role> findById(long id);
     boolean existsById(long id);
     void deleteById(long id);
+    void deleteByNameIgnoreCase(String name);
 }
