@@ -24,7 +24,7 @@ public class RoleService {
 
     /// Crear rol
     public RoleResponse createRole(CreateRoleRequest roleRequest) {
-        boolean exists = roleRepository.existsByNameIgnoreCase(roleRequest.roleName());
+        boolean exists = roleRepository.existsByRoleNameIgnoreCase(roleRequest.roleName());
         if (exists) {
             throw new RoleAlreadyExistesException("El rol " + roleRequest.roleName() + " ya está registrado");
         }
@@ -46,7 +46,7 @@ public class RoleService {
     public RoleResponse updateRole(long id, CreateRoleRequest roleRequest) {
         Role role = roleRepository.findById(id).orElseThrow(() -> new RoleNotFoundException("El rol con id " + id + " no existe"));
 
-        boolean exists = roleRepository.existsByNameIgnoreCase(roleRequest.roleName());
+        boolean exists = roleRepository.existsByRoleNameIgnoreCase(roleRequest.roleName());
         if (exists && !role.getName().equalsIgnoreCase(roleRequest.roleName())) {
             throw new RoleAlreadyExistesException("El rol " + roleRequest.roleName() + " ya está registrado");
         }
@@ -58,10 +58,10 @@ public class RoleService {
 
     /// Borrar un rol
     public void deleteRole(String roleName) {
-        if(!roleRepository.existsByNameIgnoreCase(roleName)) {
+        if(!roleRepository.existsByRoleNameIgnoreCase(roleName)) {
             throw new RoleNotFoundException("El rol " + roleName + " no existe");
         }
-        roleRepository.deleteByNameIgnoreCase(roleName);
+        roleRepository.deleteByRoleNameIgnoreCase(roleName);
     }
 
 }
