@@ -1,11 +1,14 @@
 package com.dylabs.zuko.dto.request;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import jdk.jfr.Percentage;
 
 public record  CreateRoleRequest (
-    @NotBlank(message = "Phone number cannot be blank / El número de celular no puede estar vacío")
-    @Size()
-    @Pettern(regexp = "^\\+?[0-9]+$", message = "Phone number must contain only digits and optionally start with '+' / El número de celular debe contener solo dígitos y opcionalmente empezar con '+'")
-    String ,
+        @NotBlank(message="El nombre no puede estar vacío")
+        @Size(min=3, message = "El nombre del género debe tener al menos tres caracteres")
+        String roleName,
+        @Size(max=250,message = "La descripción no puede exceder 200 caracteres")
+        String description
 ){
 }
