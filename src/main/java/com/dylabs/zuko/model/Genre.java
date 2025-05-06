@@ -1,12 +1,18 @@
 package com.dylabs.zuko.model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name="genre")
 public class Genre {
-    private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String name;
     private String description;
 
-    public Genre(Long id, String name, String description) {
-        this.id = id;
+    public Genre() {}
+    public Genre(String name, String description) {
         this.name = name;
         this.description = description;
     }
