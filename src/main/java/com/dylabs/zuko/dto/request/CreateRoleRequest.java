@@ -2,7 +2,7 @@ package com.dylabs.zuko.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import jdk.jfr.Percentage;
+
 
 public record  CreateRoleRequest (
         @NotBlank(message="El nombre no puede estar vacío")
