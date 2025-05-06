@@ -1,5 +1,8 @@
 package com.dylabs.zuko.exception;
 
+import com.dylabs.zuko.exception.roleExeptions.*;
+import com.dylabs.zuko.exception.genreExeptions.GenreAlreadyExistsException;
+import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -47,6 +50,24 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleUnexpected(Exception ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno inesperado");
         problem.setTitle("Internal Server Error");
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(RoleAlreadyExistesException.class)
+    public ProblemDetail handleRoleAlreadyExists(RoleAlreadyExistesException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Role Already Exists");
+        problem.setType(URI.create("/errors/role-already-exists"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(RoleNotFoundException.class)
+    public ProblemDetail handleRoleNotFound(RoleNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Role Not Found");
+        problem.setType(URI.create("/errors/role-not-found"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
