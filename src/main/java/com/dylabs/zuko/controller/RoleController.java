@@ -2,7 +2,6 @@ package com.dylabs.zuko.controller;
 
 import com.dylabs.zuko.dto.request.CreateRoleRequest;
 import com.dylabs.zuko.dto.response.RoleResponse;
-import com.dylabs.zuko.model.Role;
 import com.dylabs.zuko.service.RoleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,7 @@ public class RoleController {
     ///  Definicion de endpoints
 
     @PostMapping
-    public ResponseEntity<RoleResponse> creteRole(@Valid @RequestBody CreateRoleRequest request) {
+    public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody CreateRoleRequest request) {
         RoleResponse response = roleService.createRole(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
@@ -38,9 +37,9 @@ public class RoleController {
         return new ResponseEntity<>(updatedRole, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{name}")
-    public ResponseEntity<Void> deleteRole(@PathVariable String name) {
-        roleService.deleteRole(name);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteRole(@PathVariable long id) {
+        roleService.deleteRole(id);
         return ResponseEntity.ok().build();
     }
 }

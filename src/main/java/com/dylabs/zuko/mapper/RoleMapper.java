@@ -14,7 +14,10 @@ public class RoleMapper {
 
     public Role toRoleEntity(CreateRoleRequest request) {
         if (request == null) return null;
-        return new Role();
+        return Role.builder()
+                .roleName(request.roleName())
+                .description(request.description())
+                .build();
     }
 
     public void updateRoleFromRequest(Role role, CreateRoleRequest request) {

@@ -57,11 +57,11 @@ public class RoleService {
     }
 
     /// Borrar un rol
-    public void deleteRole(String roleName) {
-        if(!roleRepository.existsByRoleNameIgnoreCase(roleName)) {
-            throw new RoleNotFoundException("El rol " + roleName + " no existe");
+    public void deleteRole(long id) {
+        if(!roleRepository.existsById(id)) {
+            throw new RoleNotFoundException("El rol " + id + " no existe");
         }
-        roleRepository.deleteByRoleNameIgnoreCase(roleName);
+        roleRepository.deleteById(id);
     }
 
 }

@@ -4,15 +4,10 @@ package com.dylabs.zuko.model;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "roles", uniqueConstraints = {
-
-})
-
-@Data
+@Table(name = "roles")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -38,6 +33,8 @@ public class Role {
     public String getRoleName() {return roleName;
     }
 
+
+    public String getDescription() {return description;}
     // Setters
 
     public void setRoleName(String roleName) {
