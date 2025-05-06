@@ -50,4 +50,22 @@ public class GlobalExceptionHandler {
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
+
+    @ExceptionHandler(SongAlreadyExistException.class)
+    public ProblemDetail handleSongAlreadyExists(SongAlreadyExistException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Canción duplicada");
+        problem.setType(URI.create("/errors/song-exists"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(SongNotFoundException.class)
+    public ProblemDetail handleSongNotFound(SongNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Canción no encontrada");
+        problem.setType(URI.create("/errors/song-not-found"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
 }
