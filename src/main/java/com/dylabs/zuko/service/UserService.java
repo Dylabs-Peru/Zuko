@@ -1,7 +1,10 @@
 package com.dylabs.zuko.service;
 
 import com.dylabs.zuko.dto.request.CreateUserRequest;
+import com.dylabs.zuko.dto.request.LoginRequest;
 import com.dylabs.zuko.dto.response.UserResponse;
+import com.dylabs.zuko.exception.userExeptions.IncorretPasswordExeption;
+import com.dylabs.zuko.exception.userExeptions.IncorretPasswordExeption;
 import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
 import com.dylabs.zuko.exception.userExeptions.UserNotFoundExeption;
 import com.dylabs.zuko.exception.roleExeptions.*;
@@ -58,6 +61,17 @@ public class UserService {
         // 4. Guarda y responde
         User savedUser = userRepository.save(user);
         return userMapper.toResponse(savedUser);
+    }
+
+    public UserResponse login(LoginRequest request) {
+        User user = userRepository.findByEmailIgnoreCase(request.email())
+                .orElseThrow(() -> new UserNotFoundExeption("No existe un usuario con ese correo"));
+
+        if (!user.getPassword().equals(request.password())) {
+            throw new IncorretPasswordExeption("Contraseña incorrecta");
+        }
+
+        return userMapper.toResponse(user);
     }
 
     /// Crud
