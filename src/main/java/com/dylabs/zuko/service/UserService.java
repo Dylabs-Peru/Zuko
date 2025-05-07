@@ -74,6 +74,9 @@ public class UserService {
         return userMapper.toResponse(user);
     }
 
-    /// Crud
+    public List<UserResponse> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream().map(userMapper::toResponse).toList();
+    }
 
 }

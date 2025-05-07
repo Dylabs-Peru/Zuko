@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("users")
 @RequiredArgsConstructor
@@ -27,6 +29,12 @@ public class UserController {
     public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request) {
         UserResponse response = userService.login(request);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userService.getAllUsers();
+        return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
 }
