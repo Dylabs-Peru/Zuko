@@ -28,7 +28,7 @@ public class User {
     @Column(unique = true, nullable = true)
     private String url_image;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String description;
 
     @ManyToOne
