@@ -50,9 +50,10 @@ public class UserService {
             throw new UserAlreadyExistsException("El correo electrónico ya está registrado.");
         }
 
-        // 1. Verifica si el rol existe
-        Role userRole = roleRepository.findByRoleNameIgnoreCase(request.roleName())
-                .orElseThrow(() -> new RoleNotFoundException("El rol '" + request.roleName() + "' no existe."));
+        // 1. Verifica si el rol existe, asignando por defecto 'User' si no se especifica.
+        String roleName = (request.roleName() != null) ? request.roleName() : "User"; // Valor por defecto
+        Role userRole = roleRepository.findByRoleNameIgnoreCase(roleName)
+                .orElseThrow(() -> new RoleNotFoundException("El rol '" + roleName + "' no existe."));
 
         // 2. Mapea el request a entidad
         User user = userMapper.toUserEntity(request);
@@ -61,7 +62,11 @@ public class UserService {
         user.setUserRole(userRole);
 
         // 4. Establece el estado activo por defecto
-        user.setActive(true);
+        if (request.isActive() == null) {  // si no se envió el valor de isActive en la solicitud
+            user.setActive(true);  // establecer como true por defecto
+        } else {
+            user.setActive(request.isActive());  // si se envió, tomamos el valor que se especificó
+        }
 
         // 5. Guarda y responde
         User savedUser = userRepository.save(user);
@@ -114,6 +119,9 @@ public class UserService {
         }
         if (updateRequest.url_image() != null) {
             user.setUrl_image(updateRequest.url_image());
+        }
+        if (updateRequest.password() != null) {
+            user.setPassword(updateRequest.password());
         }
 
         // Guardar el usuario actualizado

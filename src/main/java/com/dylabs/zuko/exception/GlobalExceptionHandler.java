@@ -1,5 +1,6 @@
 package com.dylabs.zuko.exception;
 
+import com.dylabs.zuko.dto.ApiResponse;
 import com.dylabs.zuko.exception.roleExeptions.*;
 import com.dylabs.zuko.exception.userExeptions.*;
 import com.dylabs.zuko.exception.genreExeptions.GenreAlreadyExistsException;
@@ -7,12 +8,15 @@ import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -100,4 +104,5 @@ public class GlobalExceptionHandler {
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
+
 }
