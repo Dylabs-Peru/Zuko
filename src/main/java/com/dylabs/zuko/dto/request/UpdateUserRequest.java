@@ -15,4 +15,3 @@ public record UpdateUserRequest(
 
         String url_image // Este también es opcional
 ) {}
-git
