@@ -1,6 +1,7 @@
 package com.dylabs.zuko.controller;
 
 import com.dylabs.zuko.dto.request.CreateUserRequest;
+import com.dylabs.zuko.dto.request.LoginRequest;
 import com.dylabs.zuko.dto.response.UserResponse;
 import com.dylabs.zuko.service.UserService;
 import jakarta.validation.Valid;
@@ -20,6 +21,12 @@ public class UserController {
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         UserResponse response = userService.createUser(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request) {
+        UserResponse response = userService.login(request);
+        return ResponseEntity.ok(response);
     }
 
 }

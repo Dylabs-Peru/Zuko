@@ -91,4 +91,13 @@ public class GlobalExceptionHandler {
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
+
+    @ExceptionHandler(IncorretPasswordExeption.class)
+    public ProblemDetail handleIncorretPassword(IncorretPasswordExeption ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        problem.setTitle("Incorrect Password");
+        problem.setType(URI.create("/errors/incorrect-password"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
 }
