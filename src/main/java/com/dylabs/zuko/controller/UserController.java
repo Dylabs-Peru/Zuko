@@ -37,4 +37,10 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
+    @PatchMapping("/{id}/toggle-active")
+    public ResponseEntity<String> toggleUserActiveStatus(@PathVariable Long id) {
+        userService.toggleUserActiveStatus(id);
+        return ResponseEntity.ok("Estado de actividad del usuario actualizado correctamente.");
+    }
+
 }

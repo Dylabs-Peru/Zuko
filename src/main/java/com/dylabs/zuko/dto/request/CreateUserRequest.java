@@ -17,11 +17,12 @@ public record CreateUserRequest(
         @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
         String password,
 
-        String url_image, // Esto es opcional
+        String url_image,
 
         @Size(max = 250, message = "La descripción no puede exceder 250 caracteres")
         String description,
 
         @NotBlank(message = "El rol no puede estar vacío")
         String roleName // El nombre del rol, como "admin", "artista", etc.
+
 ) {}

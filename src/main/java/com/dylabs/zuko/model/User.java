@@ -35,6 +35,10 @@ public class User {
     @JoinColumn(name = "role_id", nullable = false)
     private Role userRole;
 
+    @Column(nullable = false)
+    private boolean isActive;
+
+
     /// getters
 
     public String getUsername(){return username;}
@@ -52,6 +56,10 @@ public class User {
     public String getUserRoleName() {
         return userRole != null ? userRole.getRoleName() : null;
     }
+    public boolean getIsActive() {
+        return isActive;
+    }
+
 
 
     /// Setters
@@ -72,5 +80,8 @@ public class User {
         this.userRole = userRole;
     }
 
+    public void setActive(boolean active) {
+        isActive = active;
+    }
 
 }

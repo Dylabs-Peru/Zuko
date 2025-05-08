@@ -6,5 +6,6 @@ public record UserResponse(
         String email,
         String description,
         String url_image,
-        String roleName // El nombre del rol asignado
+        String roleName, // El nombre del rol asignado
+        boolean isActive
 ) {}

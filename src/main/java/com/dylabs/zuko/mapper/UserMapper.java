@@ -18,7 +18,8 @@ public class UserMapper {
                 user.getEmail(),
                 user.getDescription(),
                 user.getUrl_image(),
-                user.getUserRoleName() // Obtener el nombre del rol
+                user.getUserRoleName(),
+                user.getIsActive()
         );
     }
 
