@@ -1,8 +1,10 @@
 package com.dylabs.zuko.exception;
 
 import com.dylabs.zuko.exception.roleExeptions.*;
+import com.dylabs.zuko.exception.userExeptions.*;
 import com.dylabs.zuko.exception.genreExeptions.GenreAlreadyExistsException;
 import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
+import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -68,6 +70,24 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setTitle("Role Not Found");
         problem.setType(URI.create("/errors/role-not-found"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ProblemDetail handleUserAlreadyExists(UserAlreadyExistsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("User Already Exists");
+        problem.setType(URI.create("/errors/user-already-exists"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(UserNotFoundExeption.class)
+    public ProblemDetail handleUserNotFound(UserNotFoundExeption ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("User Not Found");
+        problem.setType(URI.create("/errors/user-not-found"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
