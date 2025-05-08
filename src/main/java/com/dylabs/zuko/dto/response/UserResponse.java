@@ -1,6 +1,6 @@
 package com.dylabs.zuko.dto.response;
 
-public record UserResponse(
+public record  UserResponse(
         Long id,
         String username,
         String email,
