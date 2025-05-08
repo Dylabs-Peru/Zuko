@@ -91,4 +91,10 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public UserResponse getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario con ID " + id + " no encontrado"));
+        return userMapper.toResponse(user);
+    }
+
 }
