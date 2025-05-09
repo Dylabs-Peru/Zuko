@@ -43,4 +43,10 @@ public class UserController {
         return ResponseEntity.ok("Estado de actividad del usuario actualizado correctamente.");
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+        UserResponse response = userService.getUserById(id);
+        return ResponseEntity.ok(response);
+    }
+
 }
