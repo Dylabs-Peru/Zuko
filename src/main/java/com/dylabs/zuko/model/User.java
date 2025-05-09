@@ -25,7 +25,7 @@ public class User {
     @Column( nullable = false)
     private String password;
 
-    @Column(unique = true, nullable = true)
+    @Column(nullable = true)
     private String url_image;
 
     @Column(nullable = true)
