@@ -34,7 +34,8 @@ public class UserService {
                 user.getEmail(),
                 user.getUrl_image(),
                 user.getDescription(),
-                user.getUserRoleName()
+                user.getUserRoleName(),
+                user.getIsActive()
         );
     }
 
@@ -58,7 +59,10 @@ public class UserService {
         // 3. Asigna el rol
         user.setUserRole(userRole);
 
-        // 4. Guarda y responde
+        // 4. Establece el estado activo por defecto
+        user.setActive(true);
+
+        // 5. Guarda y responde
         User savedUser = userRepository.save(user);
         return userMapper.toResponse(savedUser);
     }
@@ -77,6 +81,14 @@ public class UserService {
     public List<UserResponse> getAllUsers() {
         List<User> users = userRepository.findAll();
         return users.stream().map(userMapper::toResponse).toList();
+    }
+
+    public void toggleUserActiveStatus(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario con ID " + id + " no encontrado"));
+
+        user.setActive(!user.getIsActive());
+        userRepository.save(user);
     }
 
 }
