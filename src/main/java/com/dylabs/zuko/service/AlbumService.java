@@ -4,8 +4,7 @@ import com.dylabs.zuko.dto.request.AlbumRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
 import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
-import com.dylabs.zuko.exception.artistExceptions.ArtistNotFoundException;
-import com.dylabs.zuko.exception.commonExceptions.BadRequestException;
+import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.mapper.AlbumMapper;
 import com.dylabs.zuko.model.Album;
 import com.dylabs.zuko.model.Artist;
@@ -28,14 +27,14 @@ public class AlbumService {
     private final AlbumMapper albumMapper;
 
     public AlbumResponse createAlbum(AlbumRequest request) {
-        Long artistId = parseArtistId(request.artistId());
+        Long artistId = parseArtistId(request.artistaId());  // Corregido
 
         // Verificar existencia del artista
         Artist artist = artistRepository.findById(artistId)
                 .orElseThrow(() -> new ArtistNotFoundException("El artista no fue encontrado."));
 
         // Verificar duplicado por título
-        boolean exists = albumRepository.existsByTitleIgnoreCaseAndArtistId(request.title(), artistId);
+        boolean exists = albumRepository.existsByTitleIgnoreCaseAndArtistId(request.titulo(), artistId);  // Corregido
         if (exists) {
             throw new AlbumAlreadyExistsException("El título del álbum ya existe para este artista.");
         }
@@ -43,7 +42,7 @@ public class AlbumService {
         // Verificar que el artista tenga al menos 2 canciones
         List<Song> artistSongs = songRepository.findAllByArtistId(artistId);
         if (artistSongs.size() < 2) {
-            throw new BadRequestException("Un álbum debe contener como mínimo 2 canciones.");
+            throw new AlbumAlreadyExistsException("Un álbum debe contener como mínimo 2 canciones.");
         }
 
         // Crear entidad Album
@@ -59,7 +58,7 @@ public class AlbumService {
         try {
             return Long.parseLong(artistIdString);
         } catch (NumberFormatException e) {
-            throw new BadRequestException("ID de artista inválido.");
+            throw new AlbumAlreadyExistsException("ID de artista inválido.");
         }
     }
 }
