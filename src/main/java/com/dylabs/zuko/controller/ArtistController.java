@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("artists")
+@RequestMapping("/api/v1/artists")
 @RequiredArgsConstructor
 
 public class ArtistController {
