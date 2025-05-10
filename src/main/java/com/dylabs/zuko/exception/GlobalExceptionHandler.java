@@ -7,6 +7,8 @@ import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistAlreadyExistsException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
+import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
+import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Falló la validación");
@@ -102,6 +105,7 @@ public class GlobalExceptionHandler {
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
+
     @ExceptionHandler(ArtistAlreadyExistsException.class)
     public ProblemDetail handleArtistAlreadyExists(ArtistAlreadyExistsException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
@@ -120,6 +124,21 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(SongAlreadyExistException.class)
+    public ProblemDetail handleSongAlreadyExists(SongAlreadyExistException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Canción duplicada");
+        problem.setType(URI.create("/errors/song-exists"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
 
-
+    @ExceptionHandler(SongNotFoundException.class)
+    public ProblemDetail handleSongNotFound(SongNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Canción no encontrada");
+        problem.setType(URI.create("/errors/song-not-found"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
 }
