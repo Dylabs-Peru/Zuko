@@ -1,22 +1,20 @@
 package com.dylabs.zuko.exception;
 
-import com.dylabs.zuko.dto.ApiResponse;
 import com.dylabs.zuko.exception.roleExeptions.*;
 import com.dylabs.zuko.exception.userExeptions.*;
 import com.dylabs.zuko.exception.genreExeptions.GenreAlreadyExistsException;
 import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
+import com.dylabs.zuko.exception.artistExeptions.ArtistAlreadyExistsException;
+import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.URI;
 import java.time.Instant;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -104,5 +102,24 @@ public class GlobalExceptionHandler {
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
+    @ExceptionHandler(ArtistAlreadyExistsException.class)
+    public ProblemDetail handleArtistAlreadyExists(ArtistAlreadyExistsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Artist Already Exists");
+        problem.setType(URI.create("/errors/artist-already-exists"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(ArtistNotFoundException.class)
+    public ProblemDetail handleArtistNotFound(ArtistNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Artist Not Found");
+        problem.setType(URI.create("/errors/artist-not-found"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+
 
 }

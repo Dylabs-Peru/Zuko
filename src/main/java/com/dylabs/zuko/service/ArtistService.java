@@ -21,16 +21,21 @@ public class ArtistService {
     private final UserRepository userRepository;
 
     public ArtistResponse createArtist(CreateArtistRequest request, String username) {
-        // 1. Buscar al usuario por su username (ya no viene en el request)
+        // 1. Buscar al usuario por su username
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado para el nombre: " + username));
 
-        // 2. Verificar si ya es artista
+        // 2. Verificar si el nombre del artista ya está en uso
+        if (artistRepository.findByName(request.name()).isPresent()) {
+            throw new ArtistAlreadyExistsException("El nombre del artista ya está en uso.");
+        }
+
+        // 3. Verificar si el usuario ya tiene un artista registrado
         if (artistRepository.findByUserId(currentUser.getId()).isPresent()) {
             throw new ArtistAlreadyExistsException("El usuario ya tiene un artista registrado.");
         }
 
-        // 3. Mapear y guardar
+        // 4. Mapear y guardar el nuevo artista
         Artist artist = artistMapper.toEntity(request, currentUser);
         Artist savedArtist = artistRepository.save(artist);
 
