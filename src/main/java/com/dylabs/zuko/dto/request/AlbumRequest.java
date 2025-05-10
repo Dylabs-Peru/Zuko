@@ -5,13 +5,13 @@ import jakarta.validation.constraints.NotNull;
 
 public record AlbumRequest(
         @NotBlank(message = "El título es obligatorio")
-        String title,
+        String titulo,
 
         @NotNull(message = "El año de lanzamiento es obligatorio")
-        int releaseYear,
+        int anioLanzamiento,
 
-        String cover,
+        String portada,
 
         @NotBlank(message = "El ID del artista es obligatorio")
-        String artistId
+        String artistaId
 ) {}

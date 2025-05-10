@@ -5,9 +5,11 @@ import com.dylabs.zuko.dto.response.AlbumResponse;
 import com.dylabs.zuko.service.AlbumService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/albums")
@@ -17,8 +19,8 @@ public class AlbumController {
     private final AlbumService albumService;
 
     @PostMapping
-    public ResponseEntity<AlbumResponse> createAlbum(@Valid @RequestBody AlbumRequest request) {
+    public ResponseEntity<AlbumResponse> createAlbum(@RequestBody @Valid AlbumRequest request) {
         AlbumResponse response = albumService.createAlbum(request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return ResponseEntity.ok(response);
     }
 }

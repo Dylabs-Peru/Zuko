@@ -23,7 +23,7 @@ public class Album {
     private String cover;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "artist_id")
+    @JoinColumn(name = "artist_id", nullable = false)
     private Artist artist;
 
     @OneToMany
@@ -31,7 +31,6 @@ public class Album {
     private List<Song> songs;
 
     // Getters
-
     public Long getId() {
         return id;
     }
@@ -57,7 +56,6 @@ public class Album {
     }
 
     // Setters
-
     public void setId(Long id) {
         this.id = id;
     }
