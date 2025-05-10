@@ -20,10 +20,10 @@ public class ArtistService {
     private final ArtistMapper artistMapper;
     private final UserRepository userRepository;
 
-    public ArtistResponse createArtist(CreateArtistRequest request) {
-        // 1. Buscar al usuario por su nombre
-        User currentUser = userRepository.findByUsername(request.name())
-                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado para el nombre: " + request.name()));
+    public ArtistResponse createArtist(CreateArtistRequest request, String username) {
+        // 1. Buscar al usuario por su username (ya no viene en el request)
+        User currentUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado para el nombre: " + username));
 
         // 2. Verificar si ya es artista
         if (artistRepository.findByUserId(currentUser.getId()).isPresent()) {
@@ -36,4 +36,5 @@ public class ArtistService {
 
         return artistMapper.toResponse(savedArtist);
     }
+
 }

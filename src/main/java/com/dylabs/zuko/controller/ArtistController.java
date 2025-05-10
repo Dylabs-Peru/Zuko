@@ -18,9 +18,12 @@ public class ArtistController {
 
     private final ArtistService artistService;
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<ArtistResponse>> createArtist(@Valid @RequestBody CreateArtistRequest request) {
-        ArtistResponse response = artistService.createArtist(request);
+    @PostMapping("/{username}")
+    public ResponseEntity<ApiResponse<ArtistResponse>> createArtist(
+            @PathVariable String username,
+            @Valid @RequestBody CreateArtistRequest request
+    ) {
+        ArtistResponse response = artistService.createArtist(request, username);
         return new ResponseEntity<>(new ApiResponse<>("Artista creado exitosamente", response), HttpStatus.CREATED);
     }
 }
