@@ -48,7 +48,7 @@ public class AlbumMapper {
                 album.getTitle(),
                 album.getReleaseYear(),
                 album.getCover(),
-                album.getArtist().getId(),     // Retornar el ID del artista
+                album.getArtist().getName(),
                 album.getGenre().getName()
         );
     }

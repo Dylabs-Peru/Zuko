@@ -27,8 +27,8 @@ public class AlbumService {
     private final AlbumMapper albumMapper;
 
     public AlbumResponse createAlbum(AlbumRequest request) {
-        // Obtener artista (por ahora, asumimos un artista específico ya que aún no hay autenticación)
-        Artist artist = artistRepository.findById(1L)
+        // Obtener artista
+        Artist artist = artistRepository.findById(request.artistId())
                 .orElseThrow(() -> new ArtistNotFoundException("El artista no fue encontrado."));
 
         // Verificar existencia del género
@@ -41,12 +41,20 @@ public class AlbumService {
             throw new AlbumAlreadyExistsException("El título del álbum ya existe para este artista.");
         }
 
-        // Crear entidad Album (no verificamos relación de canciones con artista por ahora)
+        // Crear entidad Album
         Album album = albumMapper.toAlbumEntity(request, artist, genre);
         album.setReleaseDate(LocalDate.now());
 
         albumRepository.save(album);
 
-        return albumMapper.toResponse(album);
+        // Crear y devolver respuesta con nombres en lugar de IDs
+        return new AlbumResponse(
+                album.getId(),
+                album.getTitle(),
+                album.getReleaseYear(),
+                album.getCover(),
+                artist.getName(),
+                genre.getName()
+        );
     }
 }

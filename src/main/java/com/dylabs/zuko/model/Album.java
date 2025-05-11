@@ -26,7 +26,7 @@ public class Album {
     @JoinColumn(name = "artist_id")
     private Artist artist;
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "album_id")
     private List<Song> songs;
 
