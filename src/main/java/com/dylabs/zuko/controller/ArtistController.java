@@ -1,0 +1,29 @@
+package com.dylabs.zuko.controller;
+
+import com.dylabs.zuko.dto.ApiResponse;
+import com.dylabs.zuko.dto.request.CreateArtistRequest;
+import com.dylabs.zuko.dto.response.ArtistResponse;
+import com.dylabs.zuko.service.ArtistService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("artists")
+@RequiredArgsConstructor
+
+public class ArtistController {
+
+    private final ArtistService artistService;
+
+    @PostMapping("/{username}")
+    public ResponseEntity<ApiResponse<ArtistResponse>> createArtist(
+            @PathVariable String username,
+            @Valid @RequestBody CreateArtistRequest request
+    ) {
+        ArtistResponse response = artistService.createArtist(request, username);
+        return new ResponseEntity<>(new ApiResponse<>("Artista creado exitosamente", response), HttpStatus.CREATED);
+    }
+}
