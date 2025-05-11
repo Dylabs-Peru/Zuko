@@ -1,5 +1,9 @@
 package com.dylabs.zuko.exception;
 
+import com.dylabs.zuko.exception.genreExeptions.GenreAlreadyExistsException;
+import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
+import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
+import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
