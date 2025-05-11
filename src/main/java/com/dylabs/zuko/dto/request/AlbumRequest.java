@@ -11,7 +11,7 @@ public record AlbumRequest(
         String title,
 
         @NotNull(message = "El año de lanzamiento es obligatorio")
-        int releaseYear,
+        Integer releaseYear,
 
         String cover,
 

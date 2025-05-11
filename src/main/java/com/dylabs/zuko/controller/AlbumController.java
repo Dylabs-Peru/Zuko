@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/albums")
 @RequiredArgsConstructor
@@ -24,9 +26,14 @@ public class AlbumController {
     private final AlbumService albumService;
 
     @PostMapping
-    public ResponseEntity<AlbumResponse> createAlbum(@RequestBody @Valid AlbumRequest request) {
+    public ResponseEntity<Object> createAlbum(@RequestBody @Valid AlbumRequest request) {
         AlbumResponse response = albumService.createAlbum(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                Map.of(
+                        "message", "Álbum creado correctamente",
+                        "data", response
+                )
+        );
     }
 
     // Manejo de excepciones específicas
@@ -44,5 +51,4 @@ public class AlbumController {
     public ResponseEntity<String> handleGenreNotFound(GenreNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
-
 }
