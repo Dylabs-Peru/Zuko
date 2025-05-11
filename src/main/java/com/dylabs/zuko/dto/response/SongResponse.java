@@ -7,5 +7,7 @@ public record SongResponse(
         String title,
         boolean isPublicSong,
         LocalDate releaseDate,
-        String message
+        String message,
+        Long artistId,
+        String artistName
 ) {}
