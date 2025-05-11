@@ -4,6 +4,7 @@ import com.dylabs.zuko.dto.request.CreateArtistRequest;
 import com.dylabs.zuko.dto.response.ArtistResponse;
 import com.dylabs.zuko.exception.artistExeptions.ArtistAlreadyExistsException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
+import com.dylabs.zuko.dto.request.UpdateArtistRequest;
 import com.dylabs.zuko.mapper.ArtistMapper;
 import com.dylabs.zuko.model.Artist;
 import com.dylabs.zuko.repository.ArtistRepository;
@@ -11,6 +12,8 @@ import com.dylabs.zuko.model.User;
 import com.dylabs.zuko.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +43,45 @@ public class ArtistService {
         Artist savedArtist = artistRepository.save(artist);
 
         return artistMapper.toResponse(savedArtist);
+    }
+    public ArtistResponse updateArtist(Long id, UpdateArtistRequest request) {
+        Artist artist = artistRepository.findById(id)
+                .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
+
+        // Validar si el nombre ya está en uso por otro artista
+        if (request.name() != null && !request.name().equals(artist.getName())) {
+            artistRepository.findByName(request.name()).ifPresent(existingArtist -> {
+                throw new ArtistAlreadyExistsException("El nombre del artista ya está en uso.");
+            });
+            artist.setName(request.name());
+        }
+
+        if (request.name() != null) {
+            artist.setName(request.name());
+        }
+
+        if (request.country() != null) {
+            artist.setCountry(request.country());
+        }
+
+        if (request.biography() != null) {
+            artist.setBiography(request.biography());
+        }
+
+        Artist updatedArtist = artistRepository.save(artist);
+        return artistMapper.toResponse(updatedArtist);
+    }
+    // Obtener todos los artistas
+    public List<ArtistResponse> getAllArtists() {
+        List<Artist> artists = artistRepository.findAll();
+        return artistMapper.toResponseList(artists);
+    }
+
+    // Obtener un artista por ID
+    public ArtistResponse getArtistById(Long id) {
+        Artist artist = artistRepository.findById(id)
+                .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
+        return artistMapper.toResponse(artist);
     }
 
 }

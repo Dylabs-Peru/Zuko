@@ -45,9 +45,15 @@ public class AlbumService {
         Album album = albumMapper.toAlbumEntity(request, artist, genre);
         album.setReleaseDate(LocalDate.now());
 
+        // Asignar artista a cada canción antes de guardar
+        if (album.getSongs() != null) {
+            album.getSongs().forEach(song -> song.setArtist(artist));
+        }
+
+        // Guardar álbum
         albumRepository.save(album);
 
-        // Crear y devolver respuesta con nombres en lugar de IDs
+        // Crear y devolver respuesta
         return new AlbumResponse(
                 album.getId(),
                 album.getTitle(),

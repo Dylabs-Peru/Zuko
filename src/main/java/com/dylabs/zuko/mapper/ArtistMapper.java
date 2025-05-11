@@ -6,6 +6,9 @@ import com.dylabs.zuko.model.Artist;
 import com.dylabs.zuko.model.User;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Component
 public class ArtistMapper {
 
@@ -26,5 +29,10 @@ public class ArtistMapper {
                 artist.getBiography(),
                 artist.getUser().getId()
         );
+    }
+    public List<ArtistResponse> toResponseList(List<Artist> artists) {
+        return artists.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 }
