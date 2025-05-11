@@ -3,19 +3,19 @@ package com.dylabs.zuko.service;
 import com.dylabs.zuko.dto.request.AlbumRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
 import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
-import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
+import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import com.dylabs.zuko.mapper.AlbumMapper;
 import com.dylabs.zuko.model.Album;
 import com.dylabs.zuko.model.Artist;
-import com.dylabs.zuko.model.Song;
+import com.dylabs.zuko.model.Genre;
 import com.dylabs.zuko.repository.AlbumRepository;
 import com.dylabs.zuko.repository.ArtistRepository;
-import com.dylabs.zuko.repository.SongRepository;
+import com.dylabs.zuko.repository.GenreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -23,42 +23,30 @@ public class AlbumService {
 
     private final AlbumRepository albumRepository;
     private final ArtistRepository artistRepository;
-    private final SongRepository songRepository;
+    private final GenreRepository genreRepository;
     private final AlbumMapper albumMapper;
 
     public AlbumResponse createAlbum(AlbumRequest request) {
-        Long artistId = parseArtistId(request.artistaId());  // Corregido
-
-        // Verificar existencia del artista
-        Artist artist = artistRepository.findById(artistId)
+        // Obtener artista (por ahora, asumimos un artista específico ya que aún no hay autenticación)
+        Artist artist = artistRepository.findById(1L)
                 .orElseThrow(() -> new ArtistNotFoundException("El artista no fue encontrado."));
 
-        // Verificar duplicado por título
-        boolean exists = albumRepository.existsByTitleIgnoreCaseAndArtistId(request.titulo(), artistId);  // Corregido
+        // Verificar existencia del género
+        Genre genre = genreRepository.findById(request.genreId())
+                .orElseThrow(() -> new GenreNotFoundException("El género no fue encontrado."));
+
+        // Verificar duplicado por título y artista
+        boolean exists = albumRepository.existsByTitleIgnoreCaseAndArtistId(request.title(), artist.getId());
         if (exists) {
             throw new AlbumAlreadyExistsException("El título del álbum ya existe para este artista.");
         }
 
-        // Verificar que el artista tenga al menos 2 canciones
-        List<Song> artistSongs = songRepository.findAllByArtistId(artistId);
-        if (artistSongs.size() < 2) {
-            throw new AlbumAlreadyExistsException("Un álbum debe contener como mínimo 2 canciones.");
-        }
-
-        // Crear entidad Album
-        Album album = albumMapper.toAlbumEntity(request, artist);
-        album.setSongs(artistSongs); // Asociar canciones del artista
+        // Crear entidad Album (no verificamos relación de canciones con artista por ahora)
+        Album album = albumMapper.toAlbumEntity(request, artist, genre);
+        album.setReleaseDate(LocalDate.now());
 
         albumRepository.save(album);
 
         return albumMapper.toResponse(album);
-    }
-
-    private Long parseArtistId(String artistIdString) {
-        try {
-            return Long.parseLong(artistIdString);
-        } catch (NumberFormatException e) {
-            throw new AlbumAlreadyExistsException("ID de artista inválido.");
-        }
     }
 }

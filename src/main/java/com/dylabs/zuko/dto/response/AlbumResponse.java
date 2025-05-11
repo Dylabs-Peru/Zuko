@@ -5,5 +5,6 @@ public record AlbumResponse(
         String title,
         int releaseYear,
         String cover,
-        Long artistId
+        Long artistId,
+        String genreName
 ) {}
