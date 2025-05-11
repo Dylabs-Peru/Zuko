@@ -1,5 +1,5 @@
 package com.dylabs.zuko.model;
-
+import com.dylabs.zuko.model.Artist;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -15,6 +15,10 @@ public class Song {
     @Column(name = "is_public")
     private boolean isPublicSong;
     private LocalDate releaseDate;
+
+    @ManyToOne
+    @JoinColumn(name = "artist_id", nullable = false)
+    private Artist artist;
 
     public Song() {}
 
@@ -54,5 +58,13 @@ public class Song {
 
     public void setReleaseDate(LocalDate releaseDate) {
         this.releaseDate = releaseDate;
+    }
+
+    public Artist getArtist() {
+        return artist;
+    }
+
+    public void setArtist(Artist artist) {
+        this.artist = artist;
     }
 }
