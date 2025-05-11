@@ -85,10 +85,18 @@ public class ArtistService {
     }
 
     public void toggleArtistActiveStatus(Long id) {
+        // 1. Buscar el artista por su ID
         Artist artist = artistRepository.findById(id)
                 .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
-        artist.setIsActive(!artist.getIsActive()); // Cambiar de true a false o viceversa
-        artistRepository.save(artist);
+
+        // 2. Obtener el usuario asociado al artista
+        User user = artist.getUser();
+
+        // 3. Alternar el estado de isActive del usuario
+        user.setActive(!user.getIsActive());
+
+        // 4. Guardar el usuario con el nuevo estado
+        userRepository.save(user);
     }
 
 
