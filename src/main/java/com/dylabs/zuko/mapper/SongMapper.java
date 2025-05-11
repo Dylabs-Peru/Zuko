@@ -2,6 +2,7 @@ package com.dylabs.zuko.mapper;
 
 import com.dylabs.zuko.dto.request.SongRequest;
 import com.dylabs.zuko.dto.response.SongResponse;
+import com.dylabs.zuko.model.Artist;
 import com.dylabs.zuko.model.Song;
 import org.springframework.stereotype.Component;
 
@@ -11,19 +12,24 @@ public class SongMapper {
     // Convertir una entidad Song a SongResponse
     public SongResponse toResponse(Song song) {
         if (song == null) return null;
-        // Aquí no es necesario poner el mensaje de éxito, ya que puedes gestionarlo en el servicio.
+        Long artistId = (song.getArtist() != null) ? song.getArtist().getId() : null;
+        String artistName = (song.getArtist() != null) ? song.getArtist().getName() : null;
+
         return new SongResponse(
                 song.getId(),
                 song.getTitle(),
                 song.isPublicSong(),
                 song.getReleaseDate(),
-                "Canción registrada exitosamente" // O un mensaje más específico si lo prefieres
+                "Canción registrada exitosamente", // O personalizado desde el servicio
+                artistId,
+                artistName
         );
     }
-
     // Convertir un SongRequest a la entidad Song
-    public Song toSongEntity(SongRequest request) {
-        if (request == null) return null;
-        return new Song(request.title(), request.isPublicSong());
+    public Song toSongEntity(SongRequest request, Artist artist) {
+        Song song = new Song(request.title(), request.isPublicSong());
+        song.setArtist(artist);
+        return song;
     }
+
 }
