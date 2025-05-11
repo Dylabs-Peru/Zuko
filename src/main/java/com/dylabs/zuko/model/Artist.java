@@ -29,7 +29,7 @@ public class Artist {
     private User user;
 
     @Column(nullable = false, columnDefinition = "boolean default true")
-    private Boolean isActive;
+    private Boolean isActive= true;
 
     // Getters
 

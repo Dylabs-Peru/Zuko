@@ -18,6 +18,7 @@ public class ArtistMapper {
                 .country(request.country())
                 .biography(request.biography())
                 .user(user)
+                .isActive(true)
                 .build();
     }
 
