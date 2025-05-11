@@ -8,5 +8,7 @@ public record SongRequest(
         @Size(min = 3, message = "El título debe tener más de 3 caracteres")
         String title,
 
-        boolean isPublicSong
+        boolean isPublicSong,
+
+        long artistId
 ) {}

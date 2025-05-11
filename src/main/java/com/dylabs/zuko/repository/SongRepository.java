@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SongRepository extends JpaRepository<Song, Long> {
     boolean existsByTitleIgnoreCase(String title);
+    boolean existsByTitleIgnoreCaseAndArtistId(String title, Long artistId);
+
 }
