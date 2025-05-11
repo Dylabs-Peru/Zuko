@@ -83,5 +83,10 @@ public class ArtistService {
                 .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
         return artistMapper.toResponse(artist);
     }
+    // obtener artista por nombre
+    public List<ArtistResponse> searchArtistsByName(String name) {
+        List<Artist> artists = artistRepository.findByNameContainingIgnoreCase(name);
+        return artistMapper.toResponseList(artists);
+    }
 
 }
