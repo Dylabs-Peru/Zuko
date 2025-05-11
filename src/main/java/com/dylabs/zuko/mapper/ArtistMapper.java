@@ -27,7 +27,8 @@ public class ArtistMapper {
                 artist.getName(),
                 artist.getCountry(),
                 artist.getBiography(),
-                artist.getUser().getId()
+                artist.getUser().getId(),
+                artist.getIsActive()
         );
     }
     public List<ArtistResponse> toResponseList(List<Artist> artists) {

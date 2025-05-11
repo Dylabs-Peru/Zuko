@@ -84,4 +84,13 @@ public class ArtistService {
         return artistMapper.toResponse(artist);
     }
 
+    public void toggleArtistActiveStatus(Long id) {
+        Artist artist = artistRepository.findById(id)
+                .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
+        artist.setIsActive(!artist.getIsActive()); // Cambiar de true a false o viceversa
+        artistRepository.save(artist);
+    }
+
+
+
 }

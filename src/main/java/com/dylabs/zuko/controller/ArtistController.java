@@ -50,4 +50,10 @@ public class ArtistController {
         var artist = artistService.getArtistById(id);
         return ResponseEntity.ok(new ApiResponse<>("Artista encontrado", artist));
     }
+
+    @PatchMapping("/{id}/toggle-active")
+    public ResponseEntity<String> toggleArtistActiveStatus(@PathVariable Long id) {
+        artistService.toggleArtistActiveStatus(id);
+        return ResponseEntity.ok("Estado de actividad del artista actualizado correctamente.");
+    }
 }
