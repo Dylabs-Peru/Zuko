@@ -13,6 +13,8 @@ import com.dylabs.zuko.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class ArtistService {
@@ -68,6 +70,18 @@ public class ArtistService {
 
         Artist updatedArtist = artistRepository.save(artist);
         return artistMapper.toResponse(updatedArtist);
+    }
+    // Obtener todos los artistas
+    public List<ArtistResponse> getAllArtists() {
+        List<Artist> artists = artistRepository.findAll();
+        return artistMapper.toResponseList(artists);
+    }
+
+    // Obtener un artista por ID
+    public ArtistResponse getArtistById(Long id) {
+        Artist artist = artistRepository.findById(id)
+                .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
+        return artistMapper.toResponse(artist);
     }
 
 }
