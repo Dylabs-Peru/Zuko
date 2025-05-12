@@ -107,4 +107,11 @@ public class AlbumService {
 
         return albumMapper.toResponse(album);
     }
+
+    // Método para eliminar un álbum por su ID
+    public void deleteAlbum(Long id) {
+        Album album = albumRepository.findById(id)
+                .orElseThrow(() -> new AlbumNotFoundException("Álbum no disponible."));
+        albumRepository.delete(album);
+    }
 }

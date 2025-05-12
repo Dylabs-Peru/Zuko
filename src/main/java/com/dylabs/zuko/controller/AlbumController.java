@@ -55,6 +55,17 @@ public class AlbumController {
         );
     }
 
+    // Endpoint para eliminar un álbum
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Object> deleteAlbum(@PathVariable Long id) {
+        albumService.deleteAlbum(id);
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Álbum eliminado correctamente"
+                )
+        );
+    }
+
     // Manejo de excepciones específicas
 
     @ExceptionHandler(AlbumAlreadyExistsException.class)
