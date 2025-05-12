@@ -5,6 +5,7 @@ import com.dylabs.zuko.dto.response.AlbumResponse;
 import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
+import com.dylabs.zuko.dto.response.AlbumSongSummaryResponse;
 import com.dylabs.zuko.mapper.AlbumMapper;
 import com.dylabs.zuko.model.Album;
 import com.dylabs.zuko.model.Artist;
@@ -16,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -44,11 +47,15 @@ public class AlbumService {
         // Crear entidad Album
         Album album = albumMapper.toAlbumEntity(request, artist, genre);
         album.setReleaseDate(LocalDate.now());
+        album.setCreationDate(LocalDate.now());
+
+        // Validar mínimo de canciones
+        if (album.getSongs() == null || album.getSongs().size() < 2) {
+            throw new IllegalArgumentException("El álbum debe contener al menos dos canciones.");
+        }
 
         // Asignar artista a cada canción antes de guardar
-        if (album.getSongs() != null) {
-            album.getSongs().forEach(song -> song.setArtist(artist));
-        }
+        album.getSongs().forEach(song -> song.setArtist(artist));
 
         // Guardar álbum
         albumRepository.save(album);
@@ -60,7 +67,10 @@ public class AlbumService {
                 album.getReleaseYear(),
                 album.getCover(),
                 artist.getName(),
-                genre.getName()
+                genre.getName(),
+                album.getSongs().stream()
+                        .map(song -> new AlbumSongSummaryResponse(song.getTitle())) // Aquí mapeas las canciones
+                        .collect(Collectors.toList()) // Lo conviertes a lista
         );
     }
 }

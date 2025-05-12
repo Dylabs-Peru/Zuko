@@ -3,6 +3,7 @@ package com.dylabs.zuko.mapper;
 import com.dylabs.zuko.dto.request.AlbumRequest;
 import com.dylabs.zuko.dto.request.SongRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
+import com.dylabs.zuko.dto.response.AlbumSongSummaryResponse;
 import com.dylabs.zuko.model.Album;
 import com.dylabs.zuko.model.Artist;
 import com.dylabs.zuko.model.Genre;
@@ -21,15 +22,19 @@ public class AlbumMapper {
         album.setTitle(request.title());
         album.setReleaseYear(request.releaseYear());
         album.setCover(request.cover());
-        album.setArtist(artist);                  // Asociar artista al álbum
-        album.setGenre(genre);                    // Asociar género
-        album.setCreationDate(LocalDate.now());   // Fecha automática
+        album.setArtist(artist);
+        album.setGenre(genre);
+        album.setCreationDate(LocalDate.now());
 
-        // Mapear canciones desde el request
-        List<Song> songs = request.songs().stream()
-                .map(this::mapToSong)
-                .collect(Collectors.toList());
-        album.setSongs(songs);
+        // Mapear canciones si existen
+        if (request.songs() != null) {
+            List<Song> songs = request.songs().stream()
+                    .map(this::mapToSong)
+                    .collect(Collectors.toList());
+            album.setSongs(songs);
+        } else {
+            album.setSongs(List.of()); // Si no se reciben canciones, se asigna una lista vacía
+        }
 
         return album;
     }
@@ -43,13 +48,19 @@ public class AlbumMapper {
     }
 
     public AlbumResponse toResponse(Album album) {
+        List<AlbumSongSummaryResponse> songs = album.getSongs().stream()
+                .map(song -> new AlbumSongSummaryResponse(song.getTitle()))
+                .toList();
+
         return new AlbumResponse(
                 album.getId(),
                 album.getTitle(),
                 album.getReleaseYear(),
                 album.getCover(),
                 album.getArtist().getName(),
-                album.getGenre().getName()
+                album.getGenre().getName(),
+                songs
         );
     }
+
 }
