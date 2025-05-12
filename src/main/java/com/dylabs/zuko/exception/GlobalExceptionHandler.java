@@ -1,22 +1,17 @@
 package com.dylabs.zuko.exception;
 
-import com.dylabs.zuko.dto.ApiResponse;
-import com.dylabs.zuko.exception.roleExeptions.*;
-import com.dylabs.zuko.exception.userExeptions.*;
 import com.dylabs.zuko.exception.genreExeptions.GenreAlreadyExistsException;
 import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
-import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
+import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
+import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.URI;
 import java.time.Instant;
-import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
@@ -60,49 +55,21 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler(RoleAlreadyExistesException.class)
-    public ProblemDetail handleRoleAlreadyExists(RoleAlreadyExistesException ex) {
+    @ExceptionHandler(SongAlreadyExistException.class)
+    public ProblemDetail handleSongAlreadyExists(SongAlreadyExistException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
-        problem.setTitle("Role Already Exists");
-        problem.setType(URI.create("/errors/role-already-exists"));
+        problem.setTitle("Canción duplicada");
+        problem.setType(URI.create("/errors/song-exists"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
 
-    @ExceptionHandler(RoleNotFoundException.class)
-    public ProblemDetail handleRoleNotFound(RoleNotFoundException ex) {
+    @ExceptionHandler(SongNotFoundException.class)
+    public ProblemDetail handleSongNotFound(SongNotFoundException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        problem.setTitle("Role Not Found");
-        problem.setType(URI.create("/errors/role-not-found"));
+        problem.setTitle("Canción no encontrada");
+        problem.setType(URI.create("/errors/song-not-found"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
-
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ProblemDetail handleUserAlreadyExists(UserAlreadyExistsException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
-        problem.setTitle("User Already Exists");
-        problem.setType(URI.create("/errors/user-already-exists"));
-        problem.setProperty("timestamp", Instant.now());
-        return problem;
-    }
-
-    @ExceptionHandler(UserNotFoundExeption.class)
-    public ProblemDetail handleUserNotFound(UserNotFoundExeption ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        problem.setTitle("User Not Found");
-        problem.setType(URI.create("/errors/user-not-found"));
-        problem.setProperty("timestamp", Instant.now());
-        return problem;
-    }
-
-    @ExceptionHandler(IncorretPasswordExeption.class)
-    public ProblemDetail handleIncorretPassword(IncorretPasswordExeption ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
-        problem.setTitle("Incorrect Password");
-        problem.setType(URI.create("/errors/incorrect-password"));
-        problem.setProperty("timestamp", Instant.now());
-        return problem;
-    }
-
 }
