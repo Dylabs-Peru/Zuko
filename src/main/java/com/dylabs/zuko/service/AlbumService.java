@@ -77,7 +77,7 @@ public class AlbumService {
         return albumMapper.toResponse(album);
     }
 
-    // Método para actualizar un álbum existente
+    // Metodo para actualizar un álbum existente
     public AlbumResponse updateAlbum(Long id, AlbumRequest request) {
         // Buscar el álbum y el artista
         Album album = albumRepository.findById(id)
@@ -108,10 +108,18 @@ public class AlbumService {
         return albumMapper.toResponse(album);
     }
 
-    // Método para eliminar un álbum por su ID
-    public void deleteAlbum(Long id) {
+    // Metodo para eliminar un álbum por su ID
+    public void deleteAlbum(Long id, Long artistId) {
         Album album = albumRepository.findById(id)
                 .orElseThrow(() -> new AlbumNotFoundException("Álbum no disponible."));
+
+        Artist artist = artistRepository.findById(artistId)
+                .orElseThrow(() -> new ArtistNotFoundException("El artista no fue encontrado."));
+
+        if (!album.getArtist().getId().equals(artist.getId())) {
+            throw new IllegalArgumentException("No tienes permiso para eliminar este álbum.");
+        }
+
         albumRepository.delete(album);
     }
 }

@@ -57,8 +57,8 @@ public class AlbumController {
 
     // Endpoint para eliminar un álbum
     @DeleteMapping("/{id}")
-    public ResponseEntity<Object> deleteAlbum(@PathVariable Long id) {
-        albumService.deleteAlbum(id);
+    public ResponseEntity<Object> deleteAlbum(@PathVariable Long id, @RequestParam Long artistId) {
+        albumService.deleteAlbum(id, artistId);
         return ResponseEntity.ok(
                 Map.of(
                         "message", "Álbum eliminado correctamente"
