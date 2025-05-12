@@ -67,7 +67,8 @@ public class AlbumService {
 
     public AlbumResponse getAlbumById(Long id) {
         Album album = albumRepository.findById(id)
-                .orElseThrow(() -> new AlbumNotFoundException("Álbum no encontrado con ID: " + id));
+                .orElseThrow(() -> new AlbumNotFoundException("Álbum no disponible."));
+                //.orElseThrow(() -> new AlbumNotFoundException("Álbum no encontrado con ID: " + id));
 
         return new AlbumResponse(
                 album.getId(),
