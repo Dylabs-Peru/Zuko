@@ -28,6 +28,9 @@ public class Artist {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean isActive= true;
+
     // Getters
 
     public Long getId() {
@@ -50,6 +53,8 @@ public class Artist {
         return user;
     }
 
+    public Boolean getIsActive() { return isActive; }
+
     // Setters
 
     public void setId(Long id) {
@@ -71,4 +76,6 @@ public class Artist {
     public void setUser(User user) {
         this.user = user;
     }
+
+    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
 }
