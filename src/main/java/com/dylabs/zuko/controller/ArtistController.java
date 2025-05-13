@@ -61,5 +61,4 @@ public class ArtistController {
         artistService.toggleArtistActiveStatus(id);
         return ResponseEntity.ok("Estado de actividad del artista actualizado correctamente.");
     }
-
 }

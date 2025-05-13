@@ -40,6 +40,8 @@ public class ArtistService {
 
         // 4. Mapear y guardar el nuevo artista
         Artist artist = artistMapper.toEntity(request, currentUser);
+        artist.setIsActive(true);
+
         Artist savedArtist = artistRepository.save(artist);
 
         return artistMapper.toResponse(savedArtist);
@@ -103,5 +105,4 @@ public class ArtistService {
         // 4. Guardar el usuario con el nuevo estado
         userRepository.save(user);
     }
-
 }
