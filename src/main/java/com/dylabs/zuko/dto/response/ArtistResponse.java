@@ -5,5 +5,6 @@ public record ArtistResponse(
         String name,
         String country,
         String biography,
-        Long userId
+        Long userId,
+        boolean isActive
 ) {}
