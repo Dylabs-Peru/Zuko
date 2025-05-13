@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("artists")
 @RequiredArgsConstructor
@@ -35,5 +37,22 @@ public class ArtistController {
     ) {
         ArtistResponse updated = artistService.updateArtist(id, request);
         return ResponseEntity.ok(updated);
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ArtistResponse>>> getAllArtists() {
+        var artists = artistService.getAllArtists();
+        return ResponseEntity.ok(new ApiResponse<>("Lista de artistas", artists));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ArtistResponse>> searchArtists(@RequestParam String name) {
+        return ResponseEntity.ok(artistService.searchArtistsByName(name));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<ArtistResponse>> getArtistById(@PathVariable Long id) {
+        var artist = artistService.getArtistById(id);
+        return ResponseEntity.ok(new ApiResponse<>("Artista encontrado", artist));
     }
 }
