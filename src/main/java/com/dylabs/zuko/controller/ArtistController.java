@@ -45,6 +45,11 @@ public class ArtistController {
         return ResponseEntity.ok(new ApiResponse<>("Lista de artistas", artists));
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<ArtistResponse>> searchArtists(@RequestParam String name) {
+        return ResponseEntity.ok(artistService.searchArtistsByName(name));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ArtistResponse>> getArtistById(@PathVariable Long id) {
         var artist = artistService.getArtistById(id);

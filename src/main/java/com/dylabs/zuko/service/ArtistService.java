@@ -84,4 +84,9 @@ public class ArtistService {
         return artistMapper.toResponse(artist);
     }
 
+    public List<ArtistResponse> searchArtistsByName(String name) {
+        List<Artist> artists = artistRepository.findByNameContainingIgnoreCase(name);
+        return artistMapper.toResponseList(artists);
+    }
+
 }
