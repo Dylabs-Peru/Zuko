@@ -44,7 +44,19 @@ public class AlbumController {
         );
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Object> updateAlbum(@PathVariable Long id, @RequestBody @Valid AlbumRequest request) {
+        AlbumResponse response = albumService.updateAlbum(id, request);
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Álbum actualizado correctamente",
+                        "data", response
+                )
+        );
+    }
+
     // Manejo de excepciones específicas
+
     @ExceptionHandler(AlbumAlreadyExistsException.class)
     public ResponseEntity<String> handleAlbumAlreadyExists(AlbumAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
@@ -63,5 +75,10 @@ public class AlbumController {
     @ExceptionHandler(AlbumNotFoundException.class)
     public ResponseEntity<String> handleAlbumNotFound(AlbumNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 }

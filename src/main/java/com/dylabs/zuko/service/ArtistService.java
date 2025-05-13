@@ -112,4 +112,25 @@ public class ArtistService {
         userRepository.save(user);
     }
 
+    // obtener artista por nombre
+    public List<ArtistResponse> searchArtistsByName(String name) {
+        List<Artist> artists = artistRepository.findByNameContainingIgnoreCase(name);
+        return artistMapper.toResponseList(artists);
+    }
+
+    public void toggleArtistActiveStatus(Long id) {
+        // 1. Buscar el artista por su ID
+        Artist artist = artistRepository.findById(id)
+                .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
+
+        // 2. Obtener el usuario asociado al artista
+        User user = artist.getUser();
+
+        // 3. Alternar el estado de isActive del usuario
+        user.setActive(!user.getIsActive());
+
+        // 4. Guardar el usuario con el nuevo estado
+        userRepository.save(user);
+    }
+
 }
