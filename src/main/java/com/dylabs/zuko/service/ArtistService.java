@@ -105,7 +105,4 @@ public class ArtistService {
         // 4. Guardar el usuario con el nuevo estado
         userRepository.save(user);
     }
-
-
-
 }

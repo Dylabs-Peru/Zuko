@@ -1,9 +1,12 @@
 package com.dylabs.zuko.exception;
 
+import com.dylabs.zuko.exception.roleExeptions.*;
+import com.dylabs.zuko.exception.userExeptions.*;
 import com.dylabs.zuko.exception.genreExeptions.GenreAlreadyExistsException;
 import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
-import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
-import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
+import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
+import com.dylabs.zuko.exception.artistExeptions.ArtistAlreadyExistsException;
+import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -55,21 +58,68 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler(SongAlreadyExistException.class)
-    public ProblemDetail handleSongAlreadyExists(SongAlreadyExistException ex) {
+    @ExceptionHandler(RoleAlreadyExistesException.class)
+    public ProblemDetail handleRoleAlreadyExists(RoleAlreadyExistesException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
-        problem.setTitle("Canción duplicada");
-        problem.setType(URI.create("/errors/song-exists"));
+        problem.setTitle("Role Already Exists");
+        problem.setType(URI.create("/errors/role-already-exists"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
 
-    @ExceptionHandler(SongNotFoundException.class)
-    public ProblemDetail handleSongNotFound(SongNotFoundException ex) {
+    @ExceptionHandler(RoleNotFoundException.class)
+    public ProblemDetail handleRoleNotFound(RoleNotFoundException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        problem.setTitle("Canción no encontrada");
-        problem.setType(URI.create("/errors/song-not-found"));
+        problem.setTitle("Role Not Found");
+        problem.setType(URI.create("/errors/role-not-found"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ProblemDetail handleUserAlreadyExists(UserAlreadyExistsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("User Already Exists");
+        problem.setType(URI.create("/errors/user-already-exists"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(UserNotFoundExeption.class)
+    public ProblemDetail handleUserNotFound(UserNotFoundExeption ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("User Not Found");
+        problem.setType(URI.create("/errors/user-not-found"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(IncorretPasswordExeption.class)
+    public ProblemDetail handleIncorretPassword(IncorretPasswordExeption ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        problem.setTitle("Incorrect Password");
+        problem.setType(URI.create("/errors/incorrect-password"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+    @ExceptionHandler(ArtistAlreadyExistsException.class)
+    public ProblemDetail handleArtistAlreadyExists(ArtistAlreadyExistsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Artist Already Exists");
+        problem.setType(URI.create("/errors/artist-already-exists"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(ArtistNotFoundException.class)
+    public ProblemDetail handleArtistNotFound(ArtistNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Artist Not Found");
+        problem.setType(URI.create("/errors/artist-not-found"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+
+
 }
