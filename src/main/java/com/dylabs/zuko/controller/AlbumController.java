@@ -3,6 +3,7 @@ package com.dylabs.zuko.controller;
 import com.dylabs.zuko.dto.request.AlbumRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
 import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
+import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import com.dylabs.zuko.service.AlbumService;
@@ -10,11 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -36,6 +33,17 @@ public class AlbumController {
         );
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Object> getAlbumById(@PathVariable Long id) {
+        AlbumResponse response = albumService.getAlbumById(id);
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Álbum obtenido correctamente",
+                        "data", response
+                )
+        );
+    }
+
     // Manejo de excepciones específicas
     @ExceptionHandler(AlbumAlreadyExistsException.class)
     public ResponseEntity<String> handleAlbumAlreadyExists(AlbumAlreadyExistsException ex) {
@@ -49,6 +57,11 @@ public class AlbumController {
 
     @ExceptionHandler(GenreNotFoundException.class)
     public ResponseEntity<String> handleGenreNotFound(GenreNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(AlbumNotFoundException.class)
+    public ResponseEntity<String> handleAlbumNotFound(AlbumNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 }

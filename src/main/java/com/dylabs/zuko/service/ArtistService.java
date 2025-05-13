@@ -91,6 +91,12 @@ public class ArtistService {
         return artistMapper.toResponseList(artists);
     }
 
+    // obtener artista por nombre
+    public List<ArtistResponse> searchArtistsByName(String name) {
+        List<Artist> artists = artistRepository.findByNameContainingIgnoreCase(name);
+        return artistMapper.toResponseList(artists);
+    }
+
     public void toggleArtistActiveStatus(Long id) {
         // 1. Buscar el artista por su ID
         Artist artist = artistRepository.findById(id)
@@ -105,4 +111,5 @@ public class ArtistService {
         // 4. Guardar el usuario con el nuevo estado
         userRepository.save(user);
     }
+
 }
