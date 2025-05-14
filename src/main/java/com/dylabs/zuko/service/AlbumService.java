@@ -32,7 +32,7 @@ public class AlbumService {
     private final AlbumMapper albumMapper;
     private final SongMapper songMapper;
 
-    // Método para crear un álbum
+    // Metodo para crear un álbum
     public AlbumResponse createAlbum(AlbumRequest request) {
         // Buscar el artista y el género
         Artist artist = artistRepository.findById(request.artistId())
