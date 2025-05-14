@@ -11,6 +11,8 @@ import com.dylabs.zuko.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -77,11 +79,23 @@ public class PlaylistMapper {
     // **Convertir un Set de IDs de usuarios a entidades User**
     public Set<User> idsToUsers(Set<Long> userIds) {
         if (userIds == null || userIds.isEmpty()) {
-            return Set.of();
+            return Set.of(); // Devuelve un Set vacío si no hay IDs proporcionados
         }
-        return userIds.stream()
-                .map(userId -> userRepository.findById(userId)
-                        .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + userId)))
-                .collect(Collectors.toSet());
+
+        // Realiza una única consulta masiva para obtener todos los usuarios con los IDs especificados
+        var users = userRepository.findAllById(userIds);
+
+        // Verifica si hay usuarios faltantes comparando el total de IDs proporcionados con los encontrados
+        if (users.size() != userIds.size()) {
+            var foundIds = users.stream()
+                    .map(User::getId)
+                    .collect(Collectors.toSet());
+            var missingIds = userIds.stream()
+                    .filter(id -> !foundIds.contains(id))
+                    .collect(Collectors.toSet());
+            throw new IllegalArgumentException("Usuarios no encontrados con los siguientes IDs: " + missingIds);
+        }
+
+        return new HashSet<>(users); // Retorna los usuarios encontrados como un Set
     }
 }
