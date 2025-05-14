@@ -28,13 +28,13 @@ public class PlaylistService {
     private final PlaylistMapper playlistMapper;
 
     // Crear una nueva Playlist
-    public PlaylistResponse createPlaylist(Long userId, PlaylistRequest playlistRequest) {
+    public PlaylistResponse createPlaylist(Long id, PlaylistRequest playlistRequest) {
         // Verificar si el usuario existe
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + userId));
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + id));
 
         // Verificar si ya existe una playlist con el mismo nombre para el usuario
-        if (playlistRepository.existsByNameIgnoreCaseAndUsers_UserId(playlistRequest.name(), userId)) {
+        if (playlistRepository.existsByNameIgnoreCaseAndUsers_id(playlistRequest.name(), id)) {
             throw new PlaylistAlreadyExistsException("Playlist con el nombre '" + playlistRequest.name() + "' ya existe para el usuario.");
         }
 
@@ -48,30 +48,30 @@ public class PlaylistService {
     }
 
     // Obtener una Playlist por ID
-    public PlaylistResponse getPlaylistById(Long userId, Long playlistId) {
+    public PlaylistResponse getPlaylistById(Long id, Long playlistId) {
         // Verificar si existe la Playlist asociada al usuario
-        Playlist playlist = playlistRepository.findByPlaylistIdAndUsers_UserId(playlistId, userId)
-                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + userId));
+        Playlist playlist = playlistRepository.findByPlaylistIdAndUsers_id(playlistId, id)
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + id));
 
         // Retornar la respuesta mapeada
         return playlistMapper.toResponse(playlist);
     }
 
     // Eliminar una Playlist por ID
-    public void deletePlaylist(Long userId, Long playlistId) {
+    public void deletePlaylist(Long id, Long playlistId) {
         // Recuperar la Playlist asociada al usuario
-        Playlist playlist = playlistRepository.findByPlaylistIdAndUsers_UserId(playlistId, userId)
-                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + userId));
+        Playlist playlist = playlistRepository.findByPlaylistIdAndUsers_id(playlistId, id)
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + id));
 
         // Eliminar la Playlist
         playlistRepository.delete(playlist);
     }
 
     // Listar canciones en una Playlist
-    public List<SongResponse> listSongsInPlaylist(Long userId, Long playlistId) {
+    public List<SongResponse> listSongsInPlaylist(Long id, Long playlistId) {
         // Recuperar la Playlist
-        Playlist playlist = playlistRepository.findByPlaylistIdAndUsers_UserId(playlistId, userId)
-                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + userId));
+        Playlist playlist = playlistRepository.findByPlaylistIdAndUsers_id(playlistId, id)
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + id));
 
         // Convertir las canciones a DTO de respuesta
         return playlist.getSongs().stream()
@@ -88,10 +88,10 @@ public class PlaylistService {
     }
 
     // Agregar una canción a una Playlist
-    public void addSongToPlaylist(Long userId, Long playlistId, Long songId) {
+    public void addSongToPlaylist(Long id, Long playlistId, Long songId) {
         // Recuperar la Playlist y la Canción
-        Playlist playlist = playlistRepository.findByPlaylistIdAndUsers_UserId(playlistId, userId)
-                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + userId));
+        Playlist playlist = playlistRepository.findByPlaylistIdAndUsers_id(playlistId, id)
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + id));
 
         Song song = songRepository.findById(songId)
                 .orElseThrow(() -> new IllegalArgumentException("Canción no encontrada con ID: " + songId));
@@ -102,10 +102,10 @@ public class PlaylistService {
     }
 
     // Eliminar una canción de una Playlist
-    public void removeSongFromPlaylist(Long userId, Long playlistId, Long songId) {
+    public void removeSongFromPlaylist(Long id, Long playlistId, Long songId) {
         // Recuperar la Playlist y la Canción
-        Playlist playlist = playlistRepository.findByPlaylistIdAndUsers_UserId(playlistId, userId)
-                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + userId));
+        Playlist playlist = playlistRepository.findByPlaylistIdAndUsers_id(playlistId, id)
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + id));
 
         Song song = songRepository.findById(songId)
                 .orElseThrow(() -> new IllegalArgumentException("Canción no encontrada con ID: " + songId));

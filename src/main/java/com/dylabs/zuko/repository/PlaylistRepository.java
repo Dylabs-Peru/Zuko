@@ -10,11 +10,10 @@ import java.util.Optional;
 @Repository
 public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
 
-    // Verificar si una playlist existe por nombre y usuario
-    boolean existsByNameIgnoreCaseAndUsers_UserId(String name, Long userId);
+    boolean existsByNameIgnoreCaseAndUsers_id(String name, Long usersId);
 
-    // Buscar una playlist por ID y usuario asociado
-    Optional<Playlist> findByPlaylistIdAndUsers_UserId(Long playlistId, Long userId);
+    Optional<Playlist> findByPlaylistIdAndUsers_id(Long playlistId, Long usersId);
+    
 
     // Buscar todas las playlists públicas
     List<Playlist> findAllByIsPublicTrue();
