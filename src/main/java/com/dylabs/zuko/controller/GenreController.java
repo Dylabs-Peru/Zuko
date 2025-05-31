@@ -1,5 +1,6 @@
 package com.dylabs.zuko.controller;
 
+import com.dylabs.zuko.dto.ApiResponse;
 import com.dylabs.zuko.dto.request.GenreRequest;
 import com.dylabs.zuko.dto.response.GenreResponse;
 import com.dylabs.zuko.model.Genre;
@@ -19,27 +20,32 @@ public class GenreController {
     private final GenreService genreService;
 
     @PostMapping
-    public ResponseEntity<GenreResponse> createGenre(@Valid @RequestBody GenreRequest request) {
+    public ResponseEntity<ApiResponse<GenreResponse>> createGenre(@Valid @RequestBody GenreRequest request) {
         GenreResponse response = genreService.createGenre(request);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return ResponseEntity
+                .status(HttpStatus.CREATED).
+                body(new ApiResponse<>("Género registrado exitosamente.", response));
     }
 
     @GetMapping
-    public ResponseEntity<List<GenreResponse>> getAllGenres() {
+    public ResponseEntity<ApiResponse<List<GenreResponse>>> getAllGenres() {
         List<GenreResponse> genres = genreService.getGenres();
-        return new ResponseEntity<>(genres, HttpStatus.OK);
+        return ResponseEntity
+                .ok(new ApiResponse<>("Lista de géneros obtenida exitosamente.",genres));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<GenreResponse> updateGenre(@PathVariable long id, @Valid @RequestBody GenreRequest request) {
+    public ResponseEntity<ApiResponse<GenreResponse>> updateGenre(@PathVariable long id, @Valid @RequestBody GenreRequest request) {
         GenreResponse updatedGenre = genreService.updateGenre(id, request);
-        return new ResponseEntity<>(updatedGenre, HttpStatus.OK);
+        return ResponseEntity
+                .ok(new ApiResponse<>("Género actualizado correctamente.", updatedGenre));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteGenre(@PathVariable long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteGenre(@PathVariable long id) {
         genreService.deleteGenre(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity
+                .ok(new ApiResponse<>("Género eliminado correctamente.",null));
     }
 
 
