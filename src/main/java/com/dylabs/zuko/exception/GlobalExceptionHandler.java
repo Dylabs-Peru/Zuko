@@ -1,6 +1,8 @@
 package com.dylabs.zuko.exception;
 
 import com.dylabs.zuko.exception.roleExeptions.*;
+import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
+import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
 import com.dylabs.zuko.exception.userExeptions.*;
 import com.dylabs.zuko.exception.genreExeptions.GenreAlreadyExistsException;
 import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
@@ -120,6 +122,21 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(SongAlreadyExistException.class)
+    public ProblemDetail handleSongAlreadyExists(SongAlreadyExistException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Canción duplicada");
+        problem.setType(URI.create("/errors/song-exists"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
 
-
+    @ExceptionHandler(SongNotFoundException.class)
+    public ProblemDetail handleSongNotFound(SongNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Canción no encontrada");
+        problem.setType(URI.create("/errors/song-not-found"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
 }
