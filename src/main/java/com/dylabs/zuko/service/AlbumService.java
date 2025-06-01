@@ -4,6 +4,8 @@ import com.dylabs.zuko.dto.request.AlbumRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
 import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
+import com.dylabs.zuko.exception.albumExceptions.AlbumPermissionException;
+import com.dylabs.zuko.exception.albumExceptions.AlbumValidationException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import com.dylabs.zuko.mapper.AlbumMapper;
@@ -48,7 +50,7 @@ public class AlbumService {
 
         // Validar que el álbum contenga al menos dos canciones
         if (request.songs() == null || request.songs().size() < 2) {
-            throw new IllegalArgumentException("El álbum debe contener al menos dos canciones.");
+            throw new AlbumValidationException("El álbum debe contener al menos dos canciones.");
         }
 
         // Convertir el DTO de solicitud a entidad de álbum
@@ -87,7 +89,7 @@ public class AlbumService {
 
         // Verificar que el artista que intenta editar el álbum sea el mismo que el creador
         if (!album.getArtist().getId().equals(artist.getId())) {
-            throw new IllegalArgumentException("No tienes permiso para editar este álbum.");
+            throw new AlbumPermissionException("No tienes permiso para editar este álbum.");
         }
 
         // Buscar el género
@@ -96,7 +98,15 @@ public class AlbumService {
 
         // Validar que el álbum contenga al menos dos canciones
         if (request.songs() == null || request.songs().size() < 2) {
-            throw new IllegalArgumentException("El álbum debe contener al menos dos canciones.");
+            throw new AlbumValidationException("El álbum debe contener al menos dos canciones.");
+        }
+
+        // Validar que al editar el nombre del álbum no coincida con uno ya existente
+        boolean existsWithSameTitle = albumRepository
+                .existsByTitleIgnoreCaseAndArtistIdAndIdNot(request.title(), artist.getId(), album.getId());
+
+        if (existsWithSameTitle) {
+            throw new AlbumAlreadyExistsException("El título del álbum ya existe para este artista.");
         }
 
         // Usar el mapper para actualizar los campos del álbum y las canciones
@@ -117,7 +127,7 @@ public class AlbumService {
                 .orElseThrow(() -> new ArtistNotFoundException("El artista no fue encontrado."));
 
         if (!album.getArtist().getId().equals(artist.getId())) {
-            throw new IllegalArgumentException("No tienes permiso para eliminar este álbum.");
+            throw new AlbumPermissionException("No tienes permiso para eliminar este álbum.");
         }
 
         albumRepository.delete(album);
