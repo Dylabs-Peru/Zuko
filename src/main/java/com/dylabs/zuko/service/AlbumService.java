@@ -99,6 +99,13 @@ public class AlbumService {
             throw new IllegalArgumentException("El álbum debe contener al menos dos canciones.");
         }
 
+        boolean existsWithSameTitle = albumRepository
+                .existsByTitleIgnoreCaseAndArtistIdAndIdNot(request.title(), artist.getId(), album.getId());
+
+        if (existsWithSameTitle) {
+            throw new AlbumAlreadyExistsException("El título del álbum ya existe para este artista.");
+        }
+
         // Usar el mapper para actualizar los campos del álbum y las canciones
         albumMapper.updateAlbumFromRequest(album, request, genre, artist); // Pasar el artista al mapper
 

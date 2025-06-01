@@ -1,5 +1,7 @@
 package com.dylabs.zuko.exception;
 
+import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
+import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
 import com.dylabs.zuko.exception.roleExeptions.*;
 import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
 import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
@@ -139,4 +141,32 @@ public class GlobalExceptionHandler {
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
+
+    @ExceptionHandler(AlbumAlreadyExistsException.class)
+    public ProblemDetail handleAlbumAlreadyExists(AlbumAlreadyExistsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Álbum duplicado");
+        problem.setType(URI.create("/errors/album-exists"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(AlbumNotFoundException.class)
+    public ProblemDetail handleAlbumNotFound(AlbumNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Álbum no encontrado");
+        problem.setType(URI.create("/errors/album-not-found"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Error de validación");
+        problem.setType(URI.create("/errors/invalid-argument"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
 }

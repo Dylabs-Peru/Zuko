@@ -2,10 +2,6 @@ package com.dylabs.zuko.controller;
 
 import com.dylabs.zuko.dto.request.AlbumRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
-import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
-import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
-import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
-import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import com.dylabs.zuko.service.AlbumService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -64,32 +60,5 @@ public class AlbumController {
                         "message", "Álbum eliminado correctamente"
                 )
         );
-    }
-
-    // Manejo de excepciones específicas
-
-    @ExceptionHandler(AlbumAlreadyExistsException.class)
-    public ResponseEntity<String> handleAlbumAlreadyExists(AlbumAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
-    }
-
-    @ExceptionHandler(ArtistNotFoundException.class)
-    public ResponseEntity<String> handleArtistNotFound(ArtistNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
-
-    @ExceptionHandler(GenreNotFoundException.class)
-    public ResponseEntity<String> handleGenreNotFound(GenreNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
-
-    @ExceptionHandler(AlbumNotFoundException.class)
-    public ResponseEntity<String> handleAlbumNotFound(AlbumNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<String> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 }
