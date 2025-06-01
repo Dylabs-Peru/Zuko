@@ -2,6 +2,8 @@ package com.dylabs.zuko.exception;
 
 import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
+import com.dylabs.zuko.exception.albumExceptions.AlbumPermissionException;
+import com.dylabs.zuko.exception.albumExceptions.AlbumValidationException;
 import com.dylabs.zuko.exception.roleExeptions.*;
 import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
 import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
@@ -160,13 +162,21 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
-        problem.setTitle("Error de validación");
-        problem.setType(URI.create("/errors/invalid-argument"));
+    @ExceptionHandler(AlbumPermissionException.class)
+    public ProblemDetail handleAlbumPermission(AlbumPermissionException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problem.setTitle("Permiso denegado");
+        problem.setType(URI.create("/errors/album-permission"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
 
+    @ExceptionHandler(AlbumValidationException.class)
+    public ProblemDetail handleAlbumValidation(AlbumValidationException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Error de validación");
+        problem.setType(URI.create("/errors/album-validation"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
 }
