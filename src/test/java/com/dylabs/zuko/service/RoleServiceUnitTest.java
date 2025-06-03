@@ -30,7 +30,7 @@ public class RoleServiceUnitTest {
     }
 
     @Test
-    @DisplayName("RF1 - Crear rol cuando no existe debe guardarse correctamente")
+    @DisplayName("CP01-HU21 - Crear rol correctamente")
     void createRole_whenRoleDoesNotExist_shouldCreateAndReturnRoleResponse() {
         CreateRoleRequest request = new CreateRoleRequest("ADMIN", "Administrador");
         Role roleEntity = new Role();
@@ -48,7 +48,7 @@ public class RoleServiceUnitTest {
     }
 
     @Test
-    @DisplayName("RF1 - Crear rol cuando ya existe debe lanzar excepción")
+    @DisplayName("CP02-HU21 - Crear rol cuando ya existe debe lanzar excepción")
     void createRole_whenRoleAlreadyExists_shouldThrowException() {
         CreateRoleRequest request = new CreateRoleRequest("ADMIN", "Administrador");
 
@@ -58,7 +58,7 @@ public class RoleServiceUnitTest {
     }
 
     @Test
-    @DisplayName("RF2 - Listar roles cuando hay registros debe devolver lista")
+    @DisplayName("CP01-HU22 - Listar roles cuando hay registros debe devolver lista")
     void getRoles_whenRolesExist_shouldReturnListOfRoleResponses() {
         Role role = new Role(1L, "ADMIN", "Administrador");
         when(roleRepository.findAll()).thenReturn(List.of(role));
@@ -70,7 +70,7 @@ public class RoleServiceUnitTest {
     }
 
     @Test
-    @DisplayName("RF2 - Listar roles cuando no hay registros debe lanzar excepción")
+    @DisplayName("CP02-HU22 - Listar roles cuando no hay registros debe lanzar excepción")
     void getRoles_whenNoRoles_shouldThrowException() {
         when(roleRepository.findAll()).thenReturn(List.of());
 
@@ -78,7 +78,7 @@ public class RoleServiceUnitTest {
     }
 
     @Test
-    @DisplayName("RF3 - Actualizar rol existente con datos válidos debe retornar el nuevo rol")
+    @DisplayName("CP01-HU20 - Actualizar rol existente con datos válidos debe retornar el nuevo rol")
     void updateRole_whenValid_shouldUpdateAndReturnResponse() {
         long id = 1L;
         CreateRoleRequest request = new CreateRoleRequest("ADMIN", "Actualizado");
@@ -97,7 +97,7 @@ public class RoleServiceUnitTest {
     }
 
     @Test
-    @DisplayName("RF3 - Actualizar rol cuando no existe debe lanzar excepción")
+    @DisplayName("CP02-HU20 - Actualizar rol cuando no existe debe lanzar excepción")
     void updateRole_whenRoleNotFound_shouldThrowException() {
         when(roleRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -106,7 +106,7 @@ public class RoleServiceUnitTest {
     }
 
     @Test
-    @DisplayName("RF3 - Actualizar rol con nombre duplicado debe lanzar excepción")
+    @DisplayName("CP03-HU20 - Actualizar rol con nombre duplicado debe lanzar excepción")
     void updateRole_whenRoleNameExistsWithDifferentName_shouldThrowException() {
         Role existing = new Role(1L, "USER", "desc");
         CreateRoleRequest request = new CreateRoleRequest("ADMIN", "nuevo");
@@ -118,7 +118,7 @@ public class RoleServiceUnitTest {
     }
 
     @Test
-    @DisplayName("RF4 - Eliminar rol existente debe borrarlo sin errores")
+    @DisplayName("CP01-HU19 - Eliminar rol existente debe borrarlo sin errores")
     void deleteRole_whenRoleExists_shouldDelete() {
         when(roleRepository.existsById(1L)).thenReturn(true);
 
@@ -128,7 +128,7 @@ public class RoleServiceUnitTest {
     }
 
     @Test
-    @DisplayName("RF4 - Eliminar rol cuando no existe debe lanzar excepción")
+    @DisplayName("CP02-HU19 - Eliminar rol cuando no existe debe lanzar excepción")
     void deleteRole_whenRoleNotFound_shouldThrowException() {
         when(roleRepository.existsById(1L)).thenReturn(false);
 
