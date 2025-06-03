@@ -3,12 +3,14 @@ package com.dylabs.zuko.service;
 import com.dylabs.zuko.dto.request.GenreRequest;
 import com.dylabs.zuko.dto.response.GenreResponse;
 import com.dylabs.zuko.exception.genreExeptions.GenreAlreadyExistsException;
+import com.dylabs.zuko.exception.genreExeptions.GenreInUseException;
 import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import com.dylabs.zuko.mapper.GenreMapper;
 import com.dylabs.zuko.model.Genre;
 import com.dylabs.zuko.repository.GenreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.dylabs.zuko.repository.AlbumRepository;
 
 import java.util.List;
 
@@ -16,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GenreService {
     private final GenreRepository repository;
+    private final AlbumRepository albumRepository;
     private final GenreMapper mapper;
 
     private GenreResponse toResponse(Genre genre){
@@ -63,6 +66,10 @@ public class GenreService {
     public void deleteGenre(long id) {
         if (!repository.existsById(id)) {
             throw new GenreNotFoundException("El género con id " + id + " no existe");
+        }
+
+        if (albumRepository.existsByGenreId(id)) {
+            throw new GenreInUseException("No se puede eliminar el género porque está asociado a uno o más álbumes.");
         }
         repository.deleteById(id);
     }

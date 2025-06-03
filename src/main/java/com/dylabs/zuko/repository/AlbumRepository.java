@@ -9,4 +9,6 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
     boolean existsByTitleIgnoreCaseAndArtistId(String title, Long artistId);
 
     boolean existsByTitleIgnoreCaseAndArtistIdAndIdNot(String title, Long artistId, Long id);
+
+    boolean existsByGenreId(Long genreId);
 }
