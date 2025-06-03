@@ -25,7 +25,7 @@ public record CreateUserRequest(
         @Size(max = 250, message = "La descripción no puede exceder 250 caracteres")
         String description,
 
-        String roleName, //El rolename no esta en notblank ya que si no se especifica en el request se asigna por defecto 'User'
+        String roleName,
 
         Boolean isActive
 

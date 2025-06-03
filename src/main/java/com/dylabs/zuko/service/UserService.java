@@ -5,7 +5,6 @@ import com.dylabs.zuko.dto.request.LoginRequest;
 import com.dylabs.zuko.dto.request.UpdateUserRequest;
 import com.dylabs.zuko.dto.response.UserResponse;
 import com.dylabs.zuko.exception.userExeptions.IncorretPasswordExeption;
-import com.dylabs.zuko.exception.userExeptions.IncorretPasswordExeption;
 import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
 import com.dylabs.zuko.exception.userExeptions.UserNotFoundExeption;
 import com.dylabs.zuko.exception.roleExeptions.*;
@@ -20,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -28,7 +28,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
 
-    private UserResponse toResponse(User user) {
+    public UserResponse toResponse(User user) {
         return new UserResponse(
                 user.getId(),
                 user.getUsername(),
@@ -50,15 +50,15 @@ public class UserService {
             throw new UserAlreadyExistsException("El correo electrónico ya está registrado.");
         }
 
-        // 1. Verifica si el rol existe, asignando por defecto 'User' si no se especifica.
+
         String roleName = (request.roleName() != null) ? request.roleName() : "User"; // Valor por defecto
         Role userRole = roleRepository.findByRoleNameIgnoreCase(roleName)
                 .orElseThrow(() -> new RoleNotFoundException("El rol '" + roleName + "' no existe."));
 
-        // 2. Mapea el request a entidad
+
         User user = userMapper.toUserEntity(request);
 
-        // 3. Asigna el rol
+
         user.setUserRole(userRole);
 
         // 4. Establece el estado activo por defecto
@@ -68,7 +68,7 @@ public class UserService {
             user.setActive(request.isActive());  // si se envió, tomamos el valor que se especificó
         }
 
-        // 5. Guarda y responde
+
         User savedUser = userRepository.save(user);
         return userMapper.toResponse(savedUser);
     }
@@ -79,6 +79,10 @@ public class UserService {
 
         if (!user.getPassword().equals(request.password())) {
             throw new IncorretPasswordExeption("Contraseña incorrecta");
+        }
+
+        if (!user.getIsActive()) {
+            throw new UserNotFoundExeption("No existe un usuario con ese correo");
         }
 
         return userMapper.toResponse(user);
@@ -107,13 +111,25 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado con id: " + id));
 
-        // Actualizar solo los campos que no son null o vacíos
+        // Check for duplicate username
         if (updateRequest.username() != null) {
+            Optional<User> existingUser = userRepository.findByUsername(updateRequest.username());
+            if (existingUser.isPresent() && !existingUser.get().getId().equals(user.getId())) {
+                throw new UserAlreadyExistsException("El nombre de usuario ya está en uso.");
+            }
             user.setUsername(updateRequest.username());
         }
+
+        // Check for duplicate email
         if (updateRequest.email() != null) {
+            Optional<User> existingUser = userRepository.findByEmail(updateRequest.email());
+            if (existingUser.isPresent() && !existingUser.get().getId().equals(user.getId())) {
+                throw new UserAlreadyExistsException("El correo electrónico ya está registrado.");
+            }
             user.setEmail(updateRequest.email());
         }
+
+        // Update other fields
         if (updateRequest.description() != null) {
             user.setDescription(updateRequest.description());
         }
@@ -124,10 +140,8 @@ public class UserService {
             user.setPassword(updateRequest.password());
         }
 
-        // Guardar el usuario actualizado
         User updatedUser = userRepository.save(user);
 
-        // Mapear el usuario actualizado al DTO de respuesta
         return new UserResponse(
                 updatedUser.getId(),
                 updatedUser.getUsername(),
