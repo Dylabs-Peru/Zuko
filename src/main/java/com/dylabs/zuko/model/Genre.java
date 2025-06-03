@@ -16,6 +16,12 @@ public class Genre {
         this.name = name;
         this.description = description;
     }
+    public Genre(Long id, String name, String description) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+    }
+
     public String getName() {
         return name;
     }

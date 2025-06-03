@@ -4,6 +4,7 @@ import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumPermissionException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumValidationException;
+import com.dylabs.zuko.exception.genreExeptions.GenreInUseException;
 import com.dylabs.zuko.exception.roleExeptions.*;
 import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
 import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
@@ -179,4 +180,14 @@ public class GlobalExceptionHandler {
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
+
+    @ExceptionHandler(GenreInUseException.class)
+    public ProblemDetail handleGenreInUse(GenreInUseException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Género en uso");
+        problem.setType(URI.create("/errors/genre-in-use"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
 }
