@@ -26,8 +26,6 @@ public class SongService {
 
     // Crear canción
     public SongResponse createSong(SongRequest request) {
-        // Validación extra
-        validateSongRequest(request);
 
         // Buscar el artista por el ID
         Artist artist = artistRepository.findById(request.artistId())
@@ -50,16 +48,6 @@ public class SongService {
         return songMapper.toResponse(savedSong);
     }
 
-    // Validaciones adicionales
-    private void validateSongRequest(SongRequest request) {
-        if (request.title() == null || request.title().isBlank()) {
-            throw new IllegalArgumentException("El título de la canción es obligatorio.");
-        }
-
-        if (request.title().length() <= 3) {
-            throw new IllegalArgumentException("El título debe tener más de 3 caracteres.");
-        }
-    }
 
     // Editar canción
     public SongResponse updateSong(Long id, SongRequest request) {
