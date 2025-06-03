@@ -53,7 +53,7 @@ public class UserServiceUnitTest {
 
     // Crear usuario
     @Test
-    @DisplayName("CPX - Crear usuario con estado activo especificado")
+    @DisplayName("CP01-HU16 - Crear usuario con estado activo especificado")
     void testCreateUserWithActiveStatusSpecified() {
         // Arrange
         CreateUserRequest request = new CreateUserRequest(
@@ -107,7 +107,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Crear usuario valido")
+    @DisplayName("CP02-HU16 - Crear usuario valido")
     void testCreateUserValid() {
         // Arrange
         CreateUserRequest request = new CreateUserRequest(
@@ -170,7 +170,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Crear usuario con rol por defecto")
+    @DisplayName("CP03-HU16 - Crear usuario con rol por defecto")
     void testCreateUserWithDefaultRole() {
         // Arrange
         CreateUserRequest request = new CreateUserRequest(
@@ -234,7 +234,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Crear usuario con estado activo por defecto")
+    @DisplayName("CP04-HU16 - Crear usuario con estado activo por defecto")
     void testCreateUserWithDefaultActiveStatus() {
         // Arrange
         CreateUserRequest request = new CreateUserRequest(
@@ -298,7 +298,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Username duplicado lanza UserAlreadyExistsException")
+    @DisplayName("CP05-HU16 - Username duplicado lanza UserAlreadyExistsException")
     void testCreateUserDuplicateUsername() {
         // Arrange
         CreateUserRequest request = new CreateUserRequest(
@@ -330,7 +330,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Email duplicado lanza UserAlreadyExistsException")
+    @DisplayName("CP06-HU16 - Email duplicado lanza UserAlreadyExistsException")
     void testCreateUserDuplicateEmail() {
         // Arrange
         CreateUserRequest request = new CreateUserRequest(
@@ -363,7 +363,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Crear usuario lanza excepción si los campos requeridos son nulos")
+    @DisplayName("CP07-HU16 - Crear usuario lanza excepción si los campos requeridos son nulos")
     void testCreateUserWithNullInputs() {
         CreateUserRequest request = new CreateUserRequest(null, null, null, null, null, null, null);
 
@@ -376,7 +376,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Crear usuario lanza RoleNotFoundException si el rol no existe")
+    @DisplayName("CP08-HU16 - Crear usuario lanza RoleNotFoundException si el rol no existe")
     void testCreateUserRoleNotFound() {
         CreateUserRequest request = new CreateUserRequest(
                 "testUser", "testEmail@example.com", "testPassword", null, null, "NonExistentRole", null
@@ -393,7 +393,7 @@ public class UserServiceUnitTest {
 
 
     @Test
-    @DisplayName("CPX - Asignación de valores opcionales (description y imageUrl)")
+    @DisplayName("CP09-HU16 - Asignación de valores opcionales (description y imageUrl)")
     void testCreateUserWithOptionalValues() {
         // Arrange
         CreateUserRequest request = new CreateUserRequest(
@@ -461,7 +461,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Creacion de usuario con contraseña invalida")
+    @DisplayName("CP10-HU16 - Creacion de usuario con contraseña invalida")
     void testInvalidPasswordPatternInDTO() {
         CreateUserRequest request = new CreateUserRequest(
                 "usuario",
@@ -487,7 +487,7 @@ public class UserServiceUnitTest {
     // Mostrar perfil de usuario
 
     @Test
-    @DisplayName("CPX - Obtener perfil de usuario válido")
+    @DisplayName("CP01-HU17 - Obtener perfil de usuario válido")
     void testGetUserById_Valid() {
         // Arrange
         Long userId = 1L;
@@ -529,7 +529,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Obtener perfil de usuario lanza UserNotFoundExeption si el ID no existe")
+    @DisplayName("CP02-HU17 - Obtener perfil de usuario lanza UserNotFoundExeption si el ID no existe")
     void testGetUserById_UserNotFound() {
         // Arrange
         Long nonExistentUserId = 999L;
@@ -549,7 +549,7 @@ public class UserServiceUnitTest {
 
     // Editar usuario
     @Test
-    @DisplayName("CPX - Actualizar usuario lanza UserAlreadyExistsException si el email ya existe")
+    @DisplayName("CP01-HU18 - Actualizar usuario lanza UserAlreadyExistsException si el email ya existe")
     void testUpdateUserDuplicateEmail() {
         Long userId = 1L;
         UpdateUserRequest updateRequest = new UpdateUserRequest(null, "duplicateEmail@example.com", null, null, null);
@@ -572,7 +572,7 @@ public class UserServiceUnitTest {
         assertEquals("El correo electrónico ya está registrado.", exception.getMessage());
     }
     @Test
-    @DisplayName("CPX - Actualizar campos deseados")
+    @DisplayName("CP02-HU17 - Actualizar campos deseados")
     void testUpdateUser_MultipleFields() {
         // Arrange
         Long userId = 1L;
@@ -632,7 +632,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Usuario no encontrado al intentar actualizar")
+    @DisplayName("CP03-HU17 - Usuario no encontrado al intentar actualizar")
     void testUpdateUser_UserNotFound() {
         // Arrange
         Long nonExistentUserId = 99L;
@@ -657,7 +657,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Actualizacion de usuario con contraseña invalida")
+    @DisplayName("CP04-HU17 - Actualizacion de usuario con contraseña invalida")
     void testInvalidPasswordUpdate() {
         UpdateUserRequest request = new UpdateUserRequest(
                 null,
@@ -679,7 +679,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Actualizacion de nombre de usuario duplicado lanza UserAlreadyExistsException")
+    @DisplayName("CP05-HU17 - Actualizacion de nombre de usuario duplicado lanza UserAlreadyExistsException")
     void testUpdateUser_DuplicateUsername() {
         // Arrange
         Long userId = 1L;
@@ -720,7 +720,7 @@ public class UserServiceUnitTest {
     // Login
 
     @Test
-    @DisplayName("CPX - Login exitoso")
+    @DisplayName("CP01-HU23 - Login exitoso")
     void testLoginSuccess() {
         // Arrange
         LoginRequest request = new LoginRequest("validEmail@example.com", "validPassword");
@@ -753,7 +753,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Correo no registrado lanza UserNotFoundExeption")
+    @DisplayName("CP02-HU23 - Correo no registrado lanza UserNotFoundExeption")
     void testLoginEmailNotFound() {
         // Arrange
         LoginRequest request = new LoginRequest("nonExistentEmail@example.com", "password");
@@ -771,7 +771,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Contraseña incorrecta lanza IncorretPasswordExeption")
+    @DisplayName("CP03-HU23 - Contraseña incorrecta lanza IncorretPasswordExeption")
     void testLoginIncorrectPassword() {
 
         LoginRequest request = new LoginRequest("validEmail@example.com", "wrongPassword");
@@ -793,7 +793,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Usuario inactivo lanza UserNotFoundExeption al intentar iniciar sesión")
+    @DisplayName("CP04-HU23 - Usuario inactivo lanza UserNotFoundExeption al intentar iniciar sesión")
     void testLoginInactiveUser() {
         // Arrange
         LoginRequest request = new LoginRequest("inactiveEmail@example.com", "validPassword");
@@ -818,7 +818,7 @@ public class UserServiceUnitTest {
     // Ver todos los usuarios
 
     @Test
-    @DisplayName("CPX - Obtener todos los usuarios exitosamente")
+    @DisplayName("CP01-HU24 - Obtener todos los usuarios exitosamente")
     void testGetAllUsers_Success() {
         // Arrange
         Role role = new Role();
@@ -868,7 +868,7 @@ public class UserServiceUnitTest {
     // Cambiar estado de usuario
 
     @Test
-    @DisplayName("CPX - Cambio exitoso de estado de usuario")
+    @DisplayName("CP01-HU25 - Cambio exitoso de estado de usuario")
     void testToggleUserActiveStatus_Success() {
         // Arrange
         Long userId = 1L;
@@ -890,7 +890,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Usuario no encontrado al intentar cambiar estado")
+    @DisplayName("CP02-HU25 - Usuario no encontrado al intentar cambiar estado")
     void testToggleUserActiveStatus_UserNotFound() {
         // Arrange
         Long nonExistentUserId = 999L;
@@ -909,7 +909,7 @@ public class UserServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CPX - Cambiar estado de usuario de activo a inactivo")
+    @DisplayName("CP03-HU25 - Cambiar estado de usuario de activo a inactivo")
     void testToggleUserActiveStatus_ActiveToInactive() {
         Long userId = 1L;
 
