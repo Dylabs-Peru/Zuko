@@ -97,14 +97,11 @@ public class ArtistService {
         Artist artist = artistRepository.findById(id)
                 .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
 
-        // 2. Obtener el usuario asociado al artista
-        User user = artist.getUser();
+        // 2. Alternar el estado de isActive del ARTISTA
+        artist.setIsActive(!artist.getIsActive());
 
-        // 3. Alternar el estado de isActive del usuario
-        user.setActive(!user.getIsActive());
-
-        // 4. Guardar el usuario con el nuevo estado
-        userRepository.save(user);
+        // 3. Guardar el artista con el nuevo estado
+        artistRepository.save(artist);
     }
 
 }
