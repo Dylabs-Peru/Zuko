@@ -57,38 +57,6 @@ public class UserService {
         );
     }
 
-//    public UserResponse createUser(CreateUserRequest request) {
-//
-//        if (userRepository.findByUsername(request.username()).isPresent()) {
-//            throw new UserAlreadyExistsException("El nombre de usuario ya está en uso.");
-//        }
-//
-//        if (userRepository.findByEmail(request.email()).isPresent()) {
-//            throw new UserAlreadyExistsException("El correo electrónico ya está registrado.");
-//        }
-//
-//
-//        String roleName = (request.roleName() != null) ? request.roleName() : "User"; // Valor por defecto
-//        Role userRole = roleRepository.findByRoleNameIgnoreCase(roleName)
-//                .orElseThrow(() -> new RoleNotFoundException("El rol '" + roleName + "' no existe."));
-//
-//
-//        User user = userMapper.toUserEntity(request);
-//
-//
-//        user.setUserRole(userRole);
-//
-//        // 4. Establece el estado activo por defecto
-//        if (request.isActive() == null) {  // si no se envió el valor de isActive en la solicitud
-//            user.setActive(true);  // establecer como true por defecto
-//        } else {
-//            user.setActive(request.isActive());  // si se envió, tomamos el valor que se especificó
-//        }
-//
-//
-//        User savedUser = userRepository.save(user);
-//        return userMapper.toResponse(savedUser);
-//    }
 
     public UserResponse createUser(CreateUserRequest request) {
         if (userRepository.findByUsername(request.username()).isPresent()) {
