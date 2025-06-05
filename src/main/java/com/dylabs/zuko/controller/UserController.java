@@ -4,6 +4,7 @@ import com.dylabs.zuko.dto.ApiResponse;
 import com.dylabs.zuko.dto.request.CreateUserRequest;
 import com.dylabs.zuko.dto.request.LoginRequest;
 import com.dylabs.zuko.dto.request.UpdateUserRequest;
+import com.dylabs.zuko.dto.response.AuthResponse;
 import com.dylabs.zuko.dto.response.UserResponse;
 import com.dylabs.zuko.service.UserService;
 import jakarta.validation.Valid;
@@ -21,15 +22,15 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping
+    @PostMapping("/signup")
     public ResponseEntity<ApiResponse<UserResponse>> createUser(@Valid @RequestBody CreateUserRequest request) {
         UserResponse response = userService.createUser(request);
         return new ResponseEntity<>(new ApiResponse<>("Usuario creado exitosamente", response), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@Valid @RequestBody LoginRequest request) {
-        UserResponse response = userService.login(request);
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        AuthResponse response = userService.login(request);
         return ResponseEntity.ok(response);
     }
 

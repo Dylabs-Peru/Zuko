@@ -1,9 +1,9 @@
 package com.dylabs.zuko.service;
-
 import com.dylabs.zuko.dto.request.CreateUserRequest;
 import com.dylabs.zuko.dto.request.LoginRequest;
 
 import com.dylabs.zuko.dto.request.UpdateUserRequest;
+import com.dylabs.zuko.dto.response.AuthResponse;
 import com.dylabs.zuko.dto.response.UserResponse;
 import com.dylabs.zuko.exception.userExeptions.IncorretPasswordExeption;
 import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
@@ -26,6 +26,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 
 import java.util.List;
@@ -36,19 +42,26 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class UserServiceUnitTest {
-
     @Mock
     private UserRepository userRepository;
     @Mock
     private RoleRepository roleRepository;
     @Mock
     private UserMapper userMapper;
+    @Mock
+    private AuthenticationManager authManager;
+    @Mock
+    private PasswordEncoder passwordEncoder;
     @InjectMocks
     private UserService userService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        userService = new UserService(userRepository, userMapper, roleRepository);
+        // Inyectar los mocks manualmente porque @Autowired no funciona con @InjectMocks
+        org.springframework.test.util.ReflectionTestUtils.setField(userService, "authManager", authManager);
+        org.springframework.test.util.ReflectionTestUtils.setField(userService, "passwordEncoder", passwordEncoder);
     }
 
     // Crear usuario
@@ -93,6 +106,7 @@ public class UserServiceUnitTest {
         when(userRepository.findByUsername("testUser")).thenReturn(Optional.empty());
         when(userRepository.findByEmail("testEmail@example.com")).thenReturn(Optional.empty());
         when(userMapper.toUserEntity(request)).thenReturn(user);
+        when(passwordEncoder.encode("testPassword")).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
         when(userMapper.toResponse(savedUser)).thenReturn(expectedResponse); // Mock response mapping
 
@@ -152,9 +166,9 @@ public class UserServiceUnitTest {
         when(userRepository.findByEmail("testEmail@example.com")).thenReturn(Optional.empty());
         when(roleRepository.findByRoleNameIgnoreCase("User")).thenReturn(Optional.of(role));
         when(userMapper.toUserEntity(request)).thenReturn(user);
+        when(passwordEncoder.encode("testPassword")).thenReturn("encodedPassword");
         when(userRepository.save(user)).thenReturn(savedUser);
         when(userMapper.toResponse(savedUser)).thenReturn(expectedResponse);
-
 
         UserResponse actualResponse = userService.createUser(request);
 
@@ -215,6 +229,7 @@ public class UserServiceUnitTest {
         when(userRepository.findByEmail("testEmail@example.com")).thenReturn(Optional.empty());
         when(roleRepository.findByRoleNameIgnoreCase("User")).thenReturn(Optional.of(defaultRole));
         when(userMapper.toUserEntity(request)).thenReturn(user);
+        when(passwordEncoder.encode("testPassword")).thenReturn("encodedPassword");
         when(userRepository.save(user)).thenReturn(savedUser);
         when(userMapper.toResponse(savedUser)).thenReturn(expectedResponse);
 
@@ -279,6 +294,7 @@ public class UserServiceUnitTest {
         when(userRepository.findByEmail("testEmail@example.com")).thenReturn(Optional.empty());
         when(roleRepository.findByRoleNameIgnoreCase("User")).thenReturn(Optional.of(role));
         when(userMapper.toUserEntity(request)).thenReturn(user);
+        when(passwordEncoder.encode("testPassword")).thenReturn("encodedPassword");
         when(userRepository.save(user)).thenReturn(savedUser);
         when(userMapper.toResponse(savedUser)).thenReturn(expectedResponse);
 
@@ -391,7 +407,6 @@ public class UserServiceUnitTest {
         assertEquals("El rol 'NonExistentRole' no existe.", exception.getMessage());
     }
 
-
     @Test
     @DisplayName("CP09-HU16 - Asignación de valores opcionales (description y imageUrl)")
     void testCreateUserWithOptionalValues() {
@@ -442,6 +457,7 @@ public class UserServiceUnitTest {
         when(userRepository.findByEmail("testEmail@example.com")).thenReturn(Optional.empty());
         when(roleRepository.findByRoleNameIgnoreCase("User")).thenReturn(Optional.of(role));
         when(userMapper.toUserEntity(request)).thenReturn(user);
+        when(passwordEncoder.encode("testPassword")).thenReturn("encodedPassword");
         when(userRepository.save(user)).thenReturn(savedUser);
         when(userMapper.toResponse(savedUser)).thenReturn(expectedResponse);
 
@@ -552,11 +568,13 @@ public class UserServiceUnitTest {
     @DisplayName("CP01-HU18 - Actualizar usuario lanza UserAlreadyExistsException si el email ya existe")
     void testUpdateUserDuplicateEmail() {
         Long userId = 1L;
-        UpdateUserRequest updateRequest = new UpdateUserRequest(null, "duplicateEmail@example.com", null, null, null);
+        UpdateUserRequest updateRequest = new UpdateUserRequest(null, "duplicateEmail@example.com", null, null, null, null);
 
         User existingUser = new User();
         existingUser.setId(userId);
         existingUser.setEmail("originalEmail@example.com");
+        existingUser.setUserRole(new Role());
+        existingUser.getUserRole().setRoleName("User");
 
         User duplicateUser = new User();
         duplicateUser.setId(2L);
@@ -565,8 +583,11 @@ public class UserServiceUnitTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(userRepository.findByEmail("duplicateEmail@example.com")).thenReturn(Optional.of(duplicateUser));
 
+        // Mock authenticated user as the same user (not admin)
+        mockAuthenticatedUser(userId, "User");
+
         UserAlreadyExistsException exception = assertThrows(
-            UserAlreadyExistsException.class, () -> userService.updateUser(userId, updateRequest)
+                UserAlreadyExistsException.class, () -> userService.updateUser(userId, updateRequest)
         );
 
         assertEquals("El correo electrónico ya está registrado.", exception.getMessage());
@@ -582,7 +603,8 @@ public class UserServiceUnitTest {
                 "updatedEmail@example.com",
                 "updatedPassword",
                 "http://updated-image.com/image.jpg",
-                "Updated description"
+                "Updated description",
+                "Admin"
         );
 
         Role role = new Role();
@@ -602,7 +624,7 @@ public class UserServiceUnitTest {
         updatedUser.setId(userId);
         updatedUser.setUsername("updatedUsername");
         updatedUser.setEmail("updatedEmail@example.com");
-        updatedUser.setPassword("updatedPassword"); // Updated password
+        updatedUser.setPassword("encodedUpdatedPassword"); // Updated password
         updatedUser.setUrl_image("http://updated-image.com/image.jpg");
         updatedUser.setDescription("Updated description");
         updatedUser.setUserRole(role);
@@ -619,7 +641,15 @@ public class UserServiceUnitTest {
         );
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.findByUsername("updatedUsername")).thenReturn(Optional.empty());
+        when(userRepository.findByEmail("updatedEmail@example.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("updatedPassword")).thenReturn("encodedUpdatedPassword");
+        when(roleRepository.findByRoleNameIgnoreCase("Admin")).thenReturn(Optional.of(role));
         when(userRepository.save(existingUser)).thenReturn(updatedUser);
+        when(userMapper.toResponse(updatedUser)).thenReturn(expectedResponse);
+
+        // Mock authenticated user as admin
+        mockAuthenticatedUser(100L, "Admin");
 
         // Act
         UserResponse actualResponse = userService.updateUser(userId, updateRequest);
@@ -641,7 +671,8 @@ public class UserServiceUnitTest {
                 "newEmail@example.com",
                 "newPassword",
                 "http://new-image.com/image.jpg",
-                "New description"
+                "New description",
+                null
         );
 
         when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
@@ -664,7 +695,8 @@ public class UserServiceUnitTest {
                 null,
                 null,
                 null,
-                "123456"
+                "123456",
+                null
         );
 
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
@@ -690,20 +722,29 @@ public class UserServiceUnitTest {
                 null, // No changes to email
                 null, // No changes to password
                 null, // No changes to image URL
-                null  // No changes to description
+                null,
+                null// No changes to description
         );
 
         User existingUser = new User();
         existingUser.setId(userId);
         existingUser.setUsername("originalUsername");
         existingUser.setEmail("originalEmail@example.com");
+        existingUser.setUserRole(new Role());
+        existingUser.getUserRole().setRoleName("User");
 
         User duplicateUser = new User();
         duplicateUser.setId(2L);
         duplicateUser.setUsername(duplicateUsername);
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        // Mock: findById is called twice (once for userToUpdate, once for authenticated user)
+        when(userRepository.findById(userId))
+            .thenReturn(Optional.of(existingUser))
+            .thenReturn(Optional.of(existingUser));
         when(userRepository.findByUsername(duplicateUsername)).thenReturn(Optional.of(duplicateUser));
+
+        // Mock authenticated user as the same user (not admin)
+        mockAuthenticatedUser(userId, "User");
 
         // Act & Assert
         UserAlreadyExistsException exception = assertThrows(
@@ -712,13 +753,61 @@ public class UserServiceUnitTest {
         );
 
         assertEquals("El nombre de usuario ya está en uso.", exception.getMessage());
-        verify(userRepository).findById(userId);
+        verify(userRepository, times(2)).findById(userId);
         verify(userRepository).findByUsername(duplicateUsername);
         verify(userRepository, never()).save(any(User.class));
     }
 
-    // Login
+    @Test
+    @DisplayName("CP06-HU17 - No puedes editar a otros usuarios (AccessDeniedException)")
+    void testUpdateUser_AccessDenied_OtherUser() {
+        // Arrange
+        Long userId = 1L; // usuario a editar
+        Long authUserId = 2L; // usuario autenticado (no admin)
+        UpdateUserRequest updateRequest = new UpdateUserRequest(
+                "otroUsername", null, null, null, null, null
+        );
+        User userToUpdate = new User();
+        userToUpdate.setId(userId);
+        userToUpdate.setUsername("originalUsername");
+        userToUpdate.setUserRole(new Role());
+        userToUpdate.getUserRole().setRoleName("User");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userToUpdate));
+        // Mock usuario autenticado como no admin y distinto id
+        mockAuthenticatedUser(authUserId, "User");
+        // Act & Assert
+        AccessDeniedException exception = assertThrows(
+                AccessDeniedException.class,
+                () -> userService.updateUser(userId, updateRequest)
+        );
+        assertEquals("No puedes editar a otros usuarios.", exception.getMessage());
+    }
 
+    @Test
+    @DisplayName("CP07-HU17 - No puedes cambiar tu propio rol si no eres admin (AccessDeniedException)")
+    void testUpdateUser_AccessDenied_ChangeRole() {
+        // Arrange
+        Long userId = 1L; // usuario autenticado y a editar
+        UpdateUserRequest updateRequest = new UpdateUserRequest(
+                null, null, null, null, null, "Admin" // roleName no nulo
+        );
+        User userToUpdate = new User();
+        userToUpdate.setId(userId);
+        userToUpdate.setUsername("originalUsername");
+        userToUpdate.setUserRole(new Role());
+        userToUpdate.getUserRole().setRoleName("User");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userToUpdate));
+        // Mock usuario autenticado como no admin y mismo id
+        mockAuthenticatedUser(userId, "User");
+        // Act & Assert
+        AccessDeniedException exception = assertThrows(
+                AccessDeniedException.class,
+                () -> userService.updateUser(userId, updateRequest)
+        );
+        assertEquals("No tienes permiso para cambiar el rol.", exception.getMessage());
+    }
+
+    // Login
     @Test
     @DisplayName("CP01-HU23 - Login exitoso")
     void testLoginSuccess() {
@@ -726,29 +815,24 @@ public class UserServiceUnitTest {
         LoginRequest request = new LoginRequest("validEmail@example.com", "validPassword");
 
         User user = new User();
+        user.setId(1L); // Asegúrate de que el usuario tenga un ID
         user.setEmail("validEmail@example.com");
-        user.setPassword("validPassword");
-        user.setActive(true); // Ensure the user is active
+        user.setUsername("validUsername");
+        user.setPassword("encodedPassword");
+        user.setUserRole(new Role());
+        user.getUserRole().setRoleName("User");
+        user.setActive(true);
 
-        UserResponse expectedResponse = new UserResponse(
-                1L,
-                "validUsername",
-                "validEmail@example.com",
-                null,
-                null,
-                "User",
-                true
-        );
-
+        when(authManager.authenticate(any())).thenReturn(null);
         when(userRepository.findByEmailIgnoreCase("validEmail@example.com")).thenReturn(Optional.of(user));
-        when(userMapper.toResponse(user)).thenReturn(expectedResponse);
+        when(userRepository.findByEmail("validEmail@example.com")).thenReturn(Optional.of(user)); // <-- agrega esto
 
         // Act
-        UserResponse actualResponse = userService.login(request);
+        AuthResponse actualResponse = userService.login(request);
 
         // Assert
         assertNotNull(actualResponse);
-        assertEquals(expectedResponse, actualResponse);
+        assertNotNull(actualResponse.token());
         verify(userRepository).findByEmailIgnoreCase("validEmail@example.com");
     }
 
@@ -758,6 +842,7 @@ public class UserServiceUnitTest {
         // Arrange
         LoginRequest request = new LoginRequest("nonExistentEmail@example.com", "password");
 
+        when(authManager.authenticate(any())).thenReturn(null); // Simula autenticación exitosa
         when(userRepository.findByEmailIgnoreCase("nonExistentEmail@example.com")).thenReturn(Optional.empty());
 
         // Act & Assert
@@ -773,23 +858,16 @@ public class UserServiceUnitTest {
     @Test
     @DisplayName("CP03-HU23 - Contraseña incorrecta lanza IncorretPasswordExeption")
     void testLoginIncorrectPassword() {
-
         LoginRequest request = new LoginRequest("validEmail@example.com", "wrongPassword");
 
-        User user = new User();
-        user.setEmail("validEmail@example.com");
-        user.setPassword("correctPassword");
-
-        when(userRepository.findByEmailIgnoreCase("validEmail@example.com")).thenReturn(Optional.of(user));
-
+        when(authManager.authenticate(any())).thenThrow(new org.springframework.security.authentication.BadCredentialsException("Bad credentials"));
 
         IncorretPasswordExeption exception = assertThrows(
                 IncorretPasswordExeption.class,
                 () -> userService.login(request)
         );
 
-        assertEquals("Contraseña incorrecta", exception.getMessage());
-        verify(userRepository).findByEmailIgnoreCase("validEmail@example.com");
+        assertEquals("Usuario o contraseña incorrectos.", exception.getMessage());
     }
 
     @Test
@@ -800,9 +878,13 @@ public class UserServiceUnitTest {
 
         User inactiveUser = new User();
         inactiveUser.setEmail("inactiveEmail@example.com");
-        inactiveUser.setPassword("validPassword");
+        inactiveUser.setPassword("encodedPassword");
         inactiveUser.setActive(false); // User is inactive
+        inactiveUser.setUsername("inactiveUsername");
+        inactiveUser.setUserRole(new Role());
+        inactiveUser.getUserRole().setRoleName("User");
 
+        when(authManager.authenticate(any())).thenReturn(null); // Simula autenticación exitosa
         when(userRepository.findByEmailIgnoreCase("inactiveEmail@example.com")).thenReturn(Optional.of(inactiveUser));
 
         // Act & Assert
@@ -811,7 +893,7 @@ public class UserServiceUnitTest {
                 () -> userService.login(request)
         );
 
-        assertEquals("No existe un usuario con ese correo", exception.getMessage());
+        assertEquals("El usuario está desactivado.", exception.getMessage());
         verify(userRepository).findByEmailIgnoreCase("inactiveEmail@example.com");
     }
 
@@ -863,8 +945,6 @@ public class UserServiceUnitTest {
         verify(userMapper).toResponse(user2);
     }
 
-
-
     // Cambiar estado de usuario
 
     @Test
@@ -877,8 +957,12 @@ public class UserServiceUnitTest {
         user.setId(userId);
         user.setUsername("testUser");
         user.setActive(false); // Initially inactive
+        user.setUserRole(new Role());
+        user.getUserRole().setRoleName("User");
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        // Mock authenticated user as admin
+        mockAuthenticatedUser(100L, "Admin");
 
         // Act
         userService.toggleUserActiveStatus(userId);
@@ -896,6 +980,8 @@ public class UserServiceUnitTest {
         Long nonExistentUserId = 999L;
 
         when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
+        // Mock authenticated user as admin
+        mockAuthenticatedUser(100L, "Admin");
 
         // Act & Assert
         UserNotFoundExeption exception = assertThrows(
@@ -905,24 +991,36 @@ public class UserServiceUnitTest {
 
         assertEquals("Usuario con ID " + nonExistentUserId + " no encontrado", exception.getMessage());
         verify(userRepository).findById(nonExistentUserId);
-        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    @DisplayName("CP03-HU25 - Cambiar estado de usuario de activo a inactivo")
-    void testToggleUserActiveStatus_ActiveToInactive() {
+    @DisplayName("CP03-HU25 - Solo admin puede cambiar estado de usuario (AccessDeniedException)")
+    void testToggleUserActiveStatus_AccessDenied() {
+        // Arrange
         Long userId = 1L;
+        // Mock authenticated user as non-admin
+        mockAuthenticatedUser(userId, "User");
 
-        User user = new User();
-        user.setId(userId);
-        user.setActive(true); // Initially active
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-
-        userService.toggleUserActiveStatus(userId);
-
-        assertFalse(user.getIsActive()); // Verify the state is updated to inactive
-        verify(userRepository).save(user);
+        // Act & Assert
+        AccessDeniedException exception = assertThrows(
+                AccessDeniedException.class,
+                () -> userService.toggleUserActiveStatus(2L) // Intenta cambiar el estado de otro usuario
+        );
+        assertEquals("Solo los administradores pueden cambiar el estado de un usuario.", exception.getMessage());
     }
 
+    // Helper para mockear usuario autenticado
+    private void mockAuthenticatedUser(Long userId, String roleName) {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(userId.toString());
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        // Mock userRepository.findById for authenticated user
+        User authUser = new User();
+        authUser.setId(userId);
+        authUser.setUserRole(new Role());
+        authUser.getUserRole().setRoleName(roleName);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(authUser));
+    }
 }

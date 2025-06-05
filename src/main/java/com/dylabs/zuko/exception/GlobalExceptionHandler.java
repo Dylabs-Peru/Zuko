@@ -16,6 +16,7 @@ import com.dylabs.zuko.exception.artistExeptions.ArtistAlreadyExistsException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -177,6 +178,16 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Error de validación");
         problem.setType(URI.create("/errors/album-validation"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        problem.setTitle("No tienes permiso para realizar esta acción");
+        problem.setType(URI.create("/errors/access-denied"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
