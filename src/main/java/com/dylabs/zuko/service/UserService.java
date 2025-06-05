@@ -17,9 +17,12 @@ import com.dylabs.zuko.mapper.UserMapper;
 import com.dylabs.zuko.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -98,7 +101,7 @@ public class UserService {
             throw new UserNotFoundExeption("El usuario está desactivado.");
         }
 
-        String token = JwtUtil.generateToken(user.getUsername(), user.getUserRoleName());
+        String token = JwtUtil.generateToken(user.getId().toString(), user.getUserRoleName());
         return new AuthResponse(token);
     }
 
@@ -108,7 +111,21 @@ public class UserService {
         return users.stream().map(userMapper::toResponse).toList();
     }
 
+//    public void toggleUserActiveStatus(Long id) {
+//        User user = userRepository.findById(id)
+//                .orElseThrow(() -> new UserNotFoundExeption("Usuario con ID " + id + " no encontrado"));
+//
+//        user.setActive(!user.getIsActive());
+//        userRepository.save(user);
+//    }
+
     public void toggleUserActiveStatus(Long id) {
+        User currentUser = getAuthenticatedUser();
+
+        if (!currentUser.getUserRoleName().equalsIgnoreCase("Admin")) {
+            throw new AccessDeniedException("Solo los administradores pueden cambiar el estado de un usuario.");
+        }
+
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundExeption("Usuario con ID " + id + " no encontrado"));
 
@@ -116,56 +133,130 @@ public class UserService {
         userRepository.save(user);
     }
 
+
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundExeption("Usuario con ID " + id + " no encontrado"));
         return userMapper.toResponse(user);
     }
 
+//    public UserResponse updateUser(Long id, UpdateUserRequest updateRequest) {
+//
+//
+//        User user = userRepository.findById(id)
+//                .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado con id: " + id));
+//
+//
+//        // Check for duplicate username
+//        if (updateRequest.username() != null) {
+//            Optional<User> existingUser = userRepository.findByUsername(updateRequest.username());
+//            if (existingUser.isPresent() && !existingUser.get().getId().equals(user.getId())) {
+//                throw new UserAlreadyExistsException("El nombre de usuario ya está en uso.");
+//            }
+//            user.setUsername(updateRequest.username());
+//        }
+//
+//        // Check for duplicate email
+//        if (updateRequest.email() != null) {
+//            Optional<User> existingUser = userRepository.findByEmail(updateRequest.email());
+//            if (existingUser.isPresent() && !existingUser.get().getId().equals(user.getId())) {
+//                throw new UserAlreadyExistsException("El correo electrónico ya está registrado.");
+//            }
+//            user.setEmail(updateRequest.email());
+//        }
+//
+//        // Update other fields
+//        if (updateRequest.description() != null) {
+//            user.setDescription(updateRequest.description());
+//        }
+//        if (updateRequest.url_image() != null) {
+//            user.setUrl_image(updateRequest.url_image());
+//        }
+//        if (updateRequest.password() != null) {
+//            user.setPassword(updateRequest.password());
+//        }
+//
+//        User updatedUser = userRepository.save(user);
+//
+//        return new UserResponse(
+//                updatedUser.getId(),
+//                updatedUser.getUsername(),
+//                updatedUser.getEmail(),
+//                updatedUser.getDescription(),
+//                updatedUser.getUrl_image(),
+//                updatedUser.getUserRoleName(),
+//                updatedUser.getIsActive()
+//        );
+//    }
+
     public UserResponse updateUser(Long id, UpdateUserRequest updateRequest) {
-        User user = userRepository.findById(id)
+        User userToUpdate = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado con id: " + id));
+
+        User currentUser = getAuthenticatedUser();
+
+        boolean isAdmin = currentUser.getUserRoleName().equalsIgnoreCase("Admin");
+
+        // Si no es admin y no es su propio perfil => prohibido
+        if (!isAdmin && !userToUpdate.getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("No puedes editar a otros usuarios.");
+        }
+
+        // Validación extra para evitar que un user cambie su propio rol
+        if (!isAdmin && updateRequest.roleName() != null) {
+            throw new AccessDeniedException("No tienes permiso para cambiar el rol.");
+        }
 
         // Check for duplicate username
         if (updateRequest.username() != null) {
             Optional<User> existingUser = userRepository.findByUsername(updateRequest.username());
-            if (existingUser.isPresent() && !existingUser.get().getId().equals(user.getId())) {
+            if (existingUser.isPresent() && !existingUser.get().getId().equals(userToUpdate.getId())) {
                 throw new UserAlreadyExistsException("El nombre de usuario ya está en uso.");
             }
-            user.setUsername(updateRequest.username());
+            userToUpdate.setUsername(updateRequest.username());
         }
 
         // Check for duplicate email
         if (updateRequest.email() != null) {
             Optional<User> existingUser = userRepository.findByEmail(updateRequest.email());
-            if (existingUser.isPresent() && !existingUser.get().getId().equals(user.getId())) {
+            if (existingUser.isPresent() && !existingUser.get().getId().equals(userToUpdate.getId())) {
                 throw new UserAlreadyExistsException("El correo electrónico ya está registrado.");
             }
-            user.setEmail(updateRequest.email());
+            userToUpdate.setEmail(updateRequest.email());
         }
 
-        // Update other fields
+        // Otros campos
         if (updateRequest.description() != null) {
-            user.setDescription(updateRequest.description());
+            userToUpdate.setDescription(updateRequest.description());
         }
+
         if (updateRequest.url_image() != null) {
-            user.setUrl_image(updateRequest.url_image());
+            userToUpdate.setUrl_image(updateRequest.url_image());
         }
+
         if (updateRequest.password() != null) {
-            user.setPassword(updateRequest.password());
+            userToUpdate.setPassword(passwordEncoder.encode(updateRequest.password()));
         }
 
-        User updatedUser = userRepository.save(user);
+        // Solo los admins pueden cambiar el rol
+        if (isAdmin && updateRequest.roleName() != null) {
+            Role newRole = roleRepository.findByRoleNameIgnoreCase(updateRequest.roleName())
+                    .orElseThrow(() -> new RoleNotFoundException("Rol no encontrado: " + updateRequest.roleName()));
+            userToUpdate.setUserRole(newRole);
+        }
 
-        return new UserResponse(
-                updatedUser.getId(),
-                updatedUser.getUsername(),
-                updatedUser.getEmail(),
-                updatedUser.getDescription(),
-                updatedUser.getUrl_image(),
-                updatedUser.getUserRoleName(),
-                updatedUser.getIsActive()
-        );
+        User updatedUser = userRepository.save(userToUpdate);
+        return userMapper.toResponse(updatedUser);
     }
+
+
+    // Metodo Helper
+
+    private User getAuthenticatedUser() {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName(); // que ahora será el ID
+        return userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario autenticado no encontrado"));
+    }
+
 
 }

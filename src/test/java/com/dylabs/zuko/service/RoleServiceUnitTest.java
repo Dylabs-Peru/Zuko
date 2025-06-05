@@ -26,7 +26,7 @@ public class RoleServiceUnitTest {
     void setUp() {
         roleRepository = mock(RoleRepository.class);
         roleMapper = mock(RoleMapper.class);
-        roleService = new RoleService(roleRepository, roleMapper);
+        roleService = new RoleService(roleRepository, roleMapper,);
     }
 
     @Test
