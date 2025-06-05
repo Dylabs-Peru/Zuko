@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class GenreController {
     private final GenreService genreService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<GenreResponse>> createGenre(@Valid @RequestBody GenreRequest request) {
         GenreResponse response = genreService.createGenre(request);
         return ResponseEntity
@@ -35,6 +37,7 @@ public class GenreController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<GenreResponse>> updateGenre(@PathVariable long id, @Valid @RequestBody GenreRequest request) {
         GenreResponse updatedGenre = genreService.updateGenre(id, request);
         return ResponseEntity
@@ -42,6 +45,7 @@ public class GenreController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteGenre(@PathVariable long id) {
         genreService.deleteGenre(id);
         return ResponseEntity
