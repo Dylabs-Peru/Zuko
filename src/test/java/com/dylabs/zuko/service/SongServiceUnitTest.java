@@ -243,9 +243,9 @@ class SongServiceUnitTest {
         assertEquals("La canción no se encontró.", exception.getMessage());
     }
 
-    // CP02 - Editar canción ARTIST sin perfil de artista lanza excepción
+
     @Test
-    @DisplayName("CP02 - Editar canción como Artista sin perfil de artista lanza excepción")
+    @DisplayName("CP02 - Editar canción como Usuario sin perfil de artista")
     void updateSongAsArtistWithoutProfileThrows() {
         Long songId = 1L;
         SongRequest request = new SongRequest("New Title", true, 99L);
@@ -265,9 +265,8 @@ class SongServiceUnitTest {
         verify(repository, never()).save(any());
     }
 
-    // CP03 - Editar canción ARTIST no dueño lanza AccessDeniedException
     @Test
-    @DisplayName("CP03 - Editar canción como Artista no dueño lanza AccessDeniedException")
+    @DisplayName("CP03 - Editar canción como Artista pero no le pertenece la canción")
     void updateSongAsArtistNotOwnerThrows() {
         Long songId = 1L;
         SongRequest request = new SongRequest("New Title", true, 99L);
@@ -289,9 +288,9 @@ class SongServiceUnitTest {
         verify(repository, never()).save(any());
     }
 
-    // CP02 - Eliminar canción ARTIST sin perfil de artista lanza excepción
+
     @Test
-    @DisplayName("CP02 - Eliminar canción como Artista sin perfil de artista lanza excepción")
+    @DisplayName("CP02 - Eliminar canción como Usuario sin perfil de artista")
     void deleteSongAsArtistWithoutProfileThrows() {
         Long songId = 1L;
         Song song = new Song("Title", true);
@@ -310,9 +309,9 @@ class SongServiceUnitTest {
         verify(repository, never()).delete(any());
     }
 
-    // CP03 - Eliminar canción ARTIST no dueño lanza AccessDeniedException
+
     @Test
-    @DisplayName("CP03 - Eliminar canción como Artista no dueño lanza AccessDeniedException")
+    @DisplayName("CP03 - Eliminar canción como Artista pero no le pertenece la canción")
     void deleteSongAsArtistNotOwnerThrows() {
         Long songId = 1L;
         Song song = new Song("Title", true);
