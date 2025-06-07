@@ -67,7 +67,7 @@ class SongServiceUnitTest {
 
     // Crear canción con rol ADMIN
     @Test
-    @DisplayName("CP01 - Crear canción como Administrador exitosamente")
+    @DisplayName("CP01 - HU01 - Crear canción como Administrador exitosamente")
     void createSongAsAdminSuccess() {
         SongRequest request = new SongRequest("Just The Way You Are", true, artist.getId());
         Song song = new Song(request.title(), request.isPublicSong());
@@ -92,7 +92,7 @@ class SongServiceUnitTest {
 
     // Crear canción con rol ARTIST
     @Test
-    @DisplayName("CP01 - Crear canción como Artista exitosamente")
+    @DisplayName("CP02 - HU01 - Crear canción como Artista exitosamente")
     void createSongAsArtistSuccess() {
         SongRequest request = new SongRequest("Locked Out of Heaven", true, 99L);
         Song song = new Song(request.title(), request.isPublicSong());
@@ -116,7 +116,7 @@ class SongServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CP02 - Crear canción con título duplicado")
+    @DisplayName("CP03 - HU01  Crear canción con título duplicado")
     void createSongTitleDuplicateThrows() {
         SongRequest request = new SongRequest("Grenade", true, artist.getId());
 
@@ -130,7 +130,7 @@ class SongServiceUnitTest {
 
     // Editar canción como ADMIN exitosamente
     @Test
-    @DisplayName("CP01 - Editar canción como Administrador exitosamente")
+    @DisplayName("CP01 - HU02 - Editar canción como Administrador exitosamente")
     void updateSongAsAdminSuccess() {
         Long songId = 1L;
         SongRequest request = new SongRequest("Grenade", true, artist.getId());
@@ -153,7 +153,7 @@ class SongServiceUnitTest {
 
     // Editar canción como ARTIST exitosamente
     @Test
-    @DisplayName("CP01 - Editar canción como Artista exitosamente")
+    @DisplayName("CP02 - HU02 - Editar canción como Artista exitosamente")
     void updateSongAsArtistSuccess() {
         Long songId = 1L;
         SongRequest request = new SongRequest("Locked Out of Heaven", true, 99L);
@@ -175,7 +175,7 @@ class SongServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CP03 - Editar canción inexistente")
+    @DisplayName("CP03 - HU02 - Editar canción inexistente")
     void updateSongNotFoundThrows() {
         Long songId = 99L;
         SongRequest request = new SongRequest("Locked Out of Heaven", true, artist.getId());
@@ -192,7 +192,7 @@ class SongServiceUnitTest {
 
     // Eliminar canción como ADMIN exitosamente
     @Test
-    @DisplayName("CP01 - Eliminar canción como Administrador exitosamente")
+    @DisplayName("CP01 - HU03 - Eliminar canción como Administrador exitosamente")
     void deleteSongAsAdminSuccess() {
         Long songId = 1L;
         Song song = new Song("Treasure", true);
@@ -211,7 +211,7 @@ class SongServiceUnitTest {
 
     // Eliminar canción como ARTIST exitosamente
     @Test
-    @DisplayName("CP01 - Eliminar canción como Artista exitosamente")
+    @DisplayName("CP02 - HU03 - Eliminar canción como Artista exitosamente")
     void deleteSongAsArtistSuccess() {
         Long songId = 1L;
         Song song = new Song("Treasure", true);
@@ -230,7 +230,7 @@ class SongServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CP02 - Eliminar canción inexistente")
+    @DisplayName("CP03 - HU03 - Eliminar canción inexistente")
     void deleteSongNotFoundThrows() {
         Long songId = 999L;
 
@@ -245,7 +245,7 @@ class SongServiceUnitTest {
 
 
     @Test
-    @DisplayName("CP02 - Editar canción como Usuario sin perfil de artista")
+    @DisplayName("CP04 - HU02 - Editar canción como Usuario sin perfil de artista")
     void updateSongAsArtistWithoutProfileThrows() {
         Long songId = 1L;
         SongRequest request = new SongRequest("New Title", true, 99L);
@@ -266,7 +266,7 @@ class SongServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CP03 - Editar canción como Artista pero no le pertenece la canción")
+    @DisplayName("CP05 - HU02 - Editar canción como Artista pero no le pertenece la canción")
     void updateSongAsArtistNotOwnerThrows() {
         Long songId = 1L;
         SongRequest request = new SongRequest("New Title", true, 99L);
@@ -290,7 +290,7 @@ class SongServiceUnitTest {
 
 
     @Test
-    @DisplayName("CP02 - Eliminar canción como Usuario sin perfil de artista")
+    @DisplayName("CP04 - HU03 -Eliminar canción como Usuario sin perfil de artista")
     void deleteSongAsArtistWithoutProfileThrows() {
         Long songId = 1L;
         Song song = new Song("Title", true);
@@ -311,7 +311,7 @@ class SongServiceUnitTest {
 
 
     @Test
-    @DisplayName("CP03 - Eliminar canción como Artista pero no le pertenece la canción")
+    @DisplayName("CP05 - HU03 - Eliminar canción como Artista pero no le pertenece la canción")
     void deleteSongAsArtistNotOwnerThrows() {
         Long songId = 1L;
         Song song = new Song("Title", true);
