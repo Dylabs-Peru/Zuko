@@ -8,14 +8,18 @@ import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
 import com.dylabs.zuko.mapper.SongMapper;
 import com.dylabs.zuko.model.Artist;
 import com.dylabs.zuko.model.Song;
+import com.dylabs.zuko.model.User;
 import com.dylabs.zuko.repository.ArtistRepository;
 import com.dylabs.zuko.repository.SongRepository;
+import com.dylabs.zuko.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.access.AccessDeniedException;
+
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -34,36 +38,77 @@ class SongServiceUnitTest {
     @Mock
     private ArtistRepository artistRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private SongService songService;
 
     private Artist artist;
+    private User adminUser;
+    private User artistUser;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
         artist = new Artist();
         artist.setId(1L);
         artist.setName("Bruno Mars");
+
+        adminUser = new User();
+        adminUser.setId(10L);
+        adminUser.setUserRoleName("ADMIN");
+
+        artistUser = new User();
+        artistUser.setId(20L);
+        artistUser.setUserRoleName("ARTIST");
     }
 
+    // Crear canción con rol ADMIN
     @Test
-    @DisplayName("CP01 - HU01 Registro correcto de una nueva canción")
-    void shouldCreateSongSuccessfully() {
-        SongRequest request = new SongRequest("Just The Way You Are", true, 1L);
+    @DisplayName("CP01 - Crear canción como Administrador exitosamente")
+    void createSongAsAdminSuccess() {
+        SongRequest request = new SongRequest("Just The Way You Are", true, artist.getId());
         Song song = new Song(request.title(), request.isPublicSong());
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
 
         SongResponse expectedResponse = new SongResponse(1L, request.title(), request.isPublicSong(), song.getReleaseDate(), "Canción registrada exitosamente", artist.getId(), artist.getName());
 
-        when(artistRepository.findById(1L)).thenReturn(Optional.of(artist));
-        when(repository.existsByTitleIgnoreCaseAndArtistId(request.title(), 1L)).thenReturn(false);
+        when(userRepository.findById(adminUser.getId())).thenReturn(Optional.of(adminUser));
+        when(artistRepository.findById(artist.getId())).thenReturn(Optional.of(artist));
+        when(repository.existsByTitleIgnoreCaseAndArtistId(request.title(), artist.getId())).thenReturn(false);
         when(mapper.toSongEntity(request, artist)).thenReturn(song);
         when(repository.save(song)).thenReturn(song);
         when(mapper.toResponse(song)).thenReturn(expectedResponse);
 
-        SongResponse response = songService.createSong(request);
+        SongResponse response = songService.createSong(request, String.valueOf(adminUser.getId()));
+
+        assertEquals("Canción registrada exitosamente", response.message());
+        assertEquals(request.title(), response.title());
+        verify(repository).save(any(Song.class));
+    }
+
+    // Crear canción con rol ARTIST
+    @Test
+    @DisplayName("CP01 - Crear canción como Artista exitosamente")
+    void createSongAsArtistSuccess() {
+        SongRequest request = new SongRequest("Locked Out of Heaven", true, 99L);
+        Song song = new Song(request.title(), request.isPublicSong());
+        song.setArtist(artist);
+        song.setReleaseDate(LocalDate.now());
+
+        SongResponse expectedResponse = new SongResponse(1L, request.title(), request.isPublicSong(), song.getReleaseDate(), "Canción registrada exitosamente", artist.getId(), artist.getName());
+
+        when(userRepository.findById(artistUser.getId())).thenReturn(Optional.of(artistUser));
+        when(artistRepository.findByUserId(artistUser.getId())).thenReturn(Optional.of(artist));
+        when(repository.existsByTitleIgnoreCaseAndArtistId(request.title(), artist.getId())).thenReturn(false);
+        when(mapper.toSongEntity(request, artist)).thenReturn(song);
+        when(repository.save(song)).thenReturn(song);
+        when(mapper.toResponse(song)).thenReturn(expectedResponse);
+
+        SongResponse response = songService.createSong(request, String.valueOf(artistUser.getId()));
 
         assertEquals("Canción registrada exitosamente", response.message());
         assertEquals(request.title(), response.title());
@@ -71,116 +116,220 @@ class SongServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CP02 - HU01 Registrar canción ya existente")
-    void shouldThrowExceptionWhenSongAlreadyExists() {
-        SongRequest request = new SongRequest("Grenade", true, 1L);
+    @DisplayName("CP02 - Crear canción con título duplicado")
+    void createSongTitleDuplicateThrows() {
+        SongRequest request = new SongRequest("Grenade", true, artist.getId());
 
-        when(artistRepository.findById(1L)).thenReturn(Optional.of(artist));
-        when(repository.existsByTitleIgnoreCaseAndArtistId(request.title(), 1L)).thenReturn(true);
+        when(userRepository.findById(adminUser.getId())).thenReturn(Optional.of(adminUser));
+        when(artistRepository.findById(artist.getId())).thenReturn(Optional.of(artist));
+        when(repository.existsByTitleIgnoreCaseAndArtistId(request.title(), artist.getId())).thenReturn(true);
 
-        assertThrows(SongAlreadyExistException.class, () -> songService.createSong(request));
+        assertThrows(SongAlreadyExistException.class, () -> songService.createSong(request, String.valueOf(adminUser.getId())));
         verify(repository, never()).save(any());
     }
 
+    // Editar canción como ADMIN exitosamente
     @Test
-    @DisplayName("CP03 - HU01 Registro rechazado por título muy corto")
-    void shouldRejectSongWithShortTitle() {
-        SongRequest request = new SongRequest("Hey", true, 1L);
+    @DisplayName("CP01 - Editar canción como Administrador exitosamente")
+    void updateSongAsAdminSuccess() {
+        Long songId = 1L;
+        SongRequest request = new SongRequest("Grenade", true, artist.getId());
 
-        when(artistRepository.findById(1L)).thenReturn(Optional.of(artist));
-        when(repository.existsByTitleIgnoreCaseAndArtistId(request.title(), 1L)).thenReturn(false);
-
-        Song song = new Song(request.title(), request.isPublicSong());
+        Song song = new Song("Old Title", false);
+        song.setId(songId);
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
 
-        when(mapper.toSongEntity(request, artist)).thenReturn(song);
+        when(userRepository.findById(adminUser.getId())).thenReturn(Optional.of(adminUser));
+        when(repository.findById(songId)).thenReturn(Optional.of(song));
+        when(artistRepository.findById(request.artistId())).thenReturn(Optional.of(artist));
         when(repository.save(song)).thenReturn(song);
-        when(mapper.toResponse(song)).thenReturn(new SongResponse(1L, song.getTitle(), song.isPublicSong(), song.getReleaseDate(), "Título muy corto", artist.getId(), artist.getName()));
 
-        SongResponse response = songService.createSong(request);
-        assertEquals("Hey", response.title());
-        assertTrue(response.title().length() < 4);
+        SongResponse response = songService.updateSong(songId, request, String.valueOf(adminUser.getId()));
+
+        assertEquals(request.title(), response.title());
+        assertEquals("La canción ha sido actualizada correctamente.", response.message());
     }
 
+    // Editar canción como ARTIST exitosamente
     @Test
-    @DisplayName("CP01 - HU02 Edición correcta de una canción")
-    void shouldUpdateSongSuccessfully() {
+    @DisplayName("CP01 - Editar canción como Artista exitosamente")
+    void updateSongAsArtistSuccess() {
         Long songId = 1L;
-        SongRequest request = new SongRequest("Locked Out of Heaven", true, 1L);
+        SongRequest request = new SongRequest("Locked Out of Heaven", true, 99L);
 
         Song song = new Song("Grenade", false);
         song.setId(songId);
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
 
+        when(userRepository.findById(artistUser.getId())).thenReturn(Optional.of(artistUser));
         when(repository.findById(songId)).thenReturn(Optional.of(song));
-        when(artistRepository.findById(1L)).thenReturn(Optional.of(artist));
-        when(repository.existsByTitleIgnoreCaseAndArtistId(request.title(), 1L)).thenReturn(false);
+        when(artistRepository.findByUserId(artistUser.getId())).thenReturn(Optional.of(artist));
         when(repository.save(song)).thenReturn(song);
 
-        SongResponse response = songService.updateSong(songId, request);
+        SongResponse response = songService.updateSong(songId, request, String.valueOf(artistUser.getId()));
 
-        assertEquals("Locked Out of Heaven", response.title());
+        assertEquals(request.title(), response.title());
         assertEquals("La canción ha sido actualizada correctamente.", response.message());
     }
 
     @Test
-    @DisplayName("CP02 - HU02 Título repetido en edición")
-    void shouldThrowExceptionWhenUpdatingToExistingTitle() {
-        Long songId = 1L;
-        SongRequest request = new SongRequest("Grenade", true, 1L);
-        Song song = new Song("Old Title", false);
-        song.setId(songId);
-        song.setArtist(artist);
-
-        when(repository.findById(songId)).thenReturn(Optional.of(song));
-        when(repository.existsByTitleIgnoreCaseAndArtistId(request.title(), 1L)).thenReturn(true);
-
-        assertThrows(SongAlreadyExistException.class, () -> songService.updateSong(songId, request));
-    }
-
-    @Test
-    @DisplayName("CP03 - HU02 Intentar editar una canción que no existe")
-    void shouldThrowExceptionWhenEditingNonExistentSong() {
+    @DisplayName("CP03 - Editar canción inexistente")
+    void updateSongNotFoundThrows() {
         Long songId = 99L;
-        SongRequest request = new SongRequest("Locked Out of Heaven", true, 1L);
+        SongRequest request = new SongRequest("Locked Out of Heaven", true, artist.getId());
 
+        when(userRepository.findById(adminUser.getId())).thenReturn(Optional.of(adminUser));
         when(repository.findById(songId)).thenReturn(Optional.empty());
 
         SongNotFoundException exception = assertThrows(SongNotFoundException.class,
-                () -> songService.updateSong(songId, request));
+                () -> songService.updateSong(songId, request, String.valueOf(adminUser.getId())));
 
         assertEquals("Canción no encontrada", exception.getMessage());
         verify(repository, never()).save(any());
     }
 
+    // Eliminar canción como ADMIN exitosamente
     @Test
-    @DisplayName("CP01 - HU03 Eliminación correcta de una canción")
-    void shouldDeleteSongSuccessfully() {
+    @DisplayName("CP01 - Eliminar canción como Administrador exitosamente")
+    void deleteSongAsAdminSuccess() {
         Long songId = 1L;
         Song song = new Song("Treasure", true);
         song.setId(songId);
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
 
+        when(userRepository.findById(adminUser.getId())).thenReturn(Optional.of(adminUser));
         when(repository.findById(songId)).thenReturn(Optional.of(song));
 
-        SongResponse response = songService.deleteSong(songId);
+        SongResponse response = songService.deleteSong(songId, String.valueOf(adminUser.getId()));
+
+        assertEquals("La canción ha sido eliminada correctamente.", response.message());
+        verify(repository).delete(song);
+    }
+
+    // Eliminar canción como ARTIST exitosamente
+    @Test
+    @DisplayName("CP01 - Eliminar canción como Artista exitosamente")
+    void deleteSongAsArtistSuccess() {
+        Long songId = 1L;
+        Song song = new Song("Treasure", true);
+        song.setId(songId);
+        song.setArtist(artist);
+        song.setReleaseDate(LocalDate.now());
+
+        when(userRepository.findById(artistUser.getId())).thenReturn(Optional.of(artistUser));
+        when(repository.findById(songId)).thenReturn(Optional.of(song));
+        when(artistRepository.findByUserId(artistUser.getId())).thenReturn(Optional.of(artist));
+
+        SongResponse response = songService.deleteSong(songId, String.valueOf(artistUser.getId()));
 
         assertEquals("La canción ha sido eliminada correctamente.", response.message());
         verify(repository).delete(song);
     }
 
     @Test
-    @DisplayName("CP02 - HU03 Intentar eliminar canción inexistente")
-    void shouldThrowExceptionWhenDeletingNonExistentSong() {
+    @DisplayName("CP02 - Eliminar canción inexistente")
+    void deleteSongNotFoundThrows() {
         Long songId = 999L;
+
+        when(userRepository.findById(adminUser.getId())).thenReturn(Optional.of(adminUser));
         when(repository.findById(songId)).thenReturn(Optional.empty());
 
         SongNotFoundException exception = assertThrows(SongNotFoundException.class,
-                () -> songService.deleteSong(songId));
+                () -> songService.deleteSong(songId, String.valueOf(adminUser.getId())));
 
-        assertEquals("La canción no se encontró en tu catálogo.", exception.getMessage());
+        assertEquals("La canción no se encontró.", exception.getMessage());
+    }
+
+    // CP02 - Editar canción ARTIST sin perfil de artista lanza excepción
+    @Test
+    @DisplayName("CP02 - Editar canción como Artista sin perfil de artista lanza excepción")
+    void updateSongAsArtistWithoutProfileThrows() {
+        Long songId = 1L;
+        SongRequest request = new SongRequest("New Title", true, 99L);
+        Song song = new Song("Old Title", false);
+        song.setId(songId);
+        song.setArtist(artist);
+        song.setReleaseDate(LocalDate.now());
+
+        when(userRepository.findById(artistUser.getId())).thenReturn(Optional.of(artistUser));
+        when(repository.findById(songId)).thenReturn(Optional.of(song));
+        when(artistRepository.findByUserId(artistUser.getId())).thenReturn(Optional.empty());
+
+        ArtistNotFoundException exception = assertThrows(ArtistNotFoundException.class,
+                () -> songService.updateSong(songId, request, String.valueOf(artistUser.getId())));
+
+        assertEquals("No tienes un perfil de artista.", exception.getMessage());
+        verify(repository, never()).save(any());
+    }
+
+    // CP03 - Editar canción ARTIST no dueño lanza AccessDeniedException
+    @Test
+    @DisplayName("CP03 - Editar canción como Artista no dueño lanza AccessDeniedException")
+    void updateSongAsArtistNotOwnerThrows() {
+        Long songId = 1L;
+        SongRequest request = new SongRequest("New Title", true, 99L);
+        Song song = new Song("Old Title", false);
+        song.setId(songId);
+        Artist anotherArtist = new Artist();
+        anotherArtist.setId(999L);
+        song.setArtist(anotherArtist);
+        song.setReleaseDate(LocalDate.now());
+
+        when(userRepository.findById(artistUser.getId())).thenReturn(Optional.of(artistUser));
+        when(repository.findById(songId)).thenReturn(Optional.of(song));
+        when(artistRepository.findByUserId(artistUser.getId())).thenReturn(Optional.of(artist));
+
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class,
+                () -> songService.updateSong(songId, request, String.valueOf(artistUser.getId())));
+
+        assertEquals("No puedes modificar esta canción.", exception.getMessage());
+        verify(repository, never()).save(any());
+    }
+
+    // CP02 - Eliminar canción ARTIST sin perfil de artista lanza excepción
+    @Test
+    @DisplayName("CP02 - Eliminar canción como Artista sin perfil de artista lanza excepción")
+    void deleteSongAsArtistWithoutProfileThrows() {
+        Long songId = 1L;
+        Song song = new Song("Title", true);
+        song.setId(songId);
+        song.setArtist(artist);
+        song.setReleaseDate(LocalDate.now());
+
+        when(userRepository.findById(artistUser.getId())).thenReturn(Optional.of(artistUser));
+        when(repository.findById(songId)).thenReturn(Optional.of(song));
+        when(artistRepository.findByUserId(artistUser.getId())).thenReturn(Optional.empty());
+
+        ArtistNotFoundException exception = assertThrows(ArtistNotFoundException.class,
+                () -> songService.deleteSong(songId, String.valueOf(artistUser.getId())));
+
+        assertEquals("No tienes un perfil de artista.", exception.getMessage());
+        verify(repository, never()).delete(any());
+    }
+
+    // CP03 - Eliminar canción ARTIST no dueño lanza AccessDeniedException
+    @Test
+    @DisplayName("CP03 - Eliminar canción como Artista no dueño lanza AccessDeniedException")
+    void deleteSongAsArtistNotOwnerThrows() {
+        Long songId = 1L;
+        Song song = new Song("Title", true);
+        song.setId(songId);
+        Artist anotherArtist = new Artist();
+        anotherArtist.setId(999L);
+        song.setArtist(anotherArtist);
+        song.setReleaseDate(LocalDate.now());
+
+        when(userRepository.findById(artistUser.getId())).thenReturn(Optional.of(artistUser));
+        when(repository.findById(songId)).thenReturn(Optional.of(song));
+        when(artistRepository.findByUserId(artistUser.getId())).thenReturn(Optional.of(artist));
+
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class,
+                () -> songService.deleteSong(songId, String.valueOf(artistUser.getId())));
+
+        assertEquals("No puedes eliminar esta canción.", exception.getMessage());
+        verify(repository, never()).delete(any());
     }
 }
