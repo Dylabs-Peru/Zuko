@@ -1,9 +1,6 @@
 package com.dylabs.zuko.service;
 
-import com.dylabs.zuko.dto.request.AlbumRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
-import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
-import com.dylabs.zuko.exception.albumExceptions.AlbumValidationException;
 import com.dylabs.zuko.mapper.AlbumMapper;
 import com.dylabs.zuko.mapper.SongMapper;
 import com.dylabs.zuko.model.Album;
