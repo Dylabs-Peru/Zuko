@@ -24,6 +24,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -284,6 +286,25 @@ class ArtistServiceUnitTest {
     }
 
     @Test
+    @DisplayName("CP05-HU08- No permite país vacío al editar artista")
+    void testUpdateArtistWithEmptyCountryThrowsException() {
+        testArtist.setUser(new User());
+        testArtist.getUser().setId(1L);
+        testArtist.getUser().setUserRoleName("USER");
+        when(artistRepository.findById(1L)).thenReturn(Optional.of(testArtist));
+
+        UpdateArtistRequest req = new UpdateArtistRequest(
+                "Test Artist",
+                "", // país vacío
+                "Test Biography"
+        );
+
+        assertThrows(IllegalArgumentException.class, () ->
+                artistService.updateArtist(1L, req, "1")
+        );
+    }
+
+    @Test
     @DisplayName("CP06-HU08 - Actualizar artista sin modificar la biografia")
     void testUpdateArtistWithNullBiography() {
         testArtist.setCountry("Test Country");
@@ -315,9 +336,83 @@ class ArtistServiceUnitTest {
         assertEquals("Test Biography", response.biography()); // No cambia
     }
 
+    //Security
+    @Test
+    @DisplayName("CP07-HU08- Solo el dueño puede editar su artista")
+    void testUpdateArtistOnlyOwnerCanEdit() {
+        // El artista pertenece al usuario 1 (dueño)
+        testArtist.setUser(new User());
+        testArtist.getUser().setId(1L);
+        testArtist.getUser().setUserRoleName("USER");
+        when(artistRepository.findById(1L)).thenReturn(Optional.of(testArtist));
+        when(artistRepository.save(any())).thenReturn(testArtist);
+        when(artistMapper.toResponse(any())).thenReturn(new ArtistResponse(
+                1L, "Nuevo Nombre", "Test Country", "Test Biography", 1L, true
+        ));
+
+
+        UpdateArtistRequest req = new UpdateArtistRequest(
+                "Nuevo Nombre", "Test Country", "Test Biography"
+        );
+
+        ArtistResponse response = artistService.updateArtist(1L, req, "1");
+
+        assertNotNull(response);
+        assertEquals("Nuevo Nombre", response.name());
+    }
+
+    @Test
+    @DisplayName("CP08-HU08- No permite editar si no es el dueño")
+    void testUpdateArtistNotOwnerThrowsException() {
+        // El artista pertenece a otro usuario (99), autenticado es 2 (USER)
+        testArtist.setUser(new User());
+        testArtist.getUser().setId(99L);
+        testArtist.getUser().setUserRoleName("USER");
+        when(artistRepository.findById(1L)).thenReturn(Optional.of(testArtist));
+        User otroUsuario = new User();
+        otroUsuario.setId(2L);
+        otroUsuario.setUserRoleName("USER");
+        when(userRepository.findById(2L)).thenReturn(Optional.of(otroUsuario));
+
+        UpdateArtistRequest req = new UpdateArtistRequest(
+                "Nuevo Nombre", "Test Country", "Test Biography"
+        );
+
+        assertThrows(org.springframework.security.access.AccessDeniedException.class, () ->
+                artistService.updateArtist(1L, req, "2")
+        );
+    }
+
+    @Test
+    @DisplayName("CP09-HU08- Admin puede editar cualquier artista")
+    void testUpdateArtistAdminCanEditAnyArtist() {
+        // El artista pertenece a otro usuario (99), autenticado es 1 (ADMIN)
+        testArtist.setUser(new User());
+        testArtist.getUser().setId(99L);
+        testArtist.getUser().setUserRoleName("USER");
+        when(artistRepository.findById(1L)).thenReturn(Optional.of(testArtist));
+        User adminUser = new User();
+        adminUser.setId(1L);
+        adminUser.setUserRoleName("ADMIN");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(adminUser));
+        when(artistRepository.save(any())).thenReturn(testArtist);
+        when(artistMapper.toResponse(any())).thenReturn(new ArtistResponse(
+                1L, "Nombre Editado Por Admin", "País", "Bio", 99L, true
+        ));
+
+        UpdateArtistRequest req = new UpdateArtistRequest(
+                "Nombre Editado Por Admin", "País", "Bio"
+        );
+
+        ArtistResponse response = artistService.updateArtist(1L, req, "1");
+
+        assertNotNull(response);
+        assertEquals("Nombre Editado Por Admin", response.name());
+    }
+
     // Mostrar artista
     @Test
-    @DisplayName("CP01-HU09 - Listar todos los artistas")
+    @DisplayName("CP01-HU09- Listar todos los artistas")
     void testGetAllArtists() {
         // Arrange
         when(artistRepository.findAll())
@@ -346,7 +441,7 @@ class ArtistServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CP02-HU09 - Buscar artista por ID existente")
+    @DisplayName("CP02-HU09- Buscar artista por ID existente")
     void testGetArtistById() {
         // Arrange
         when(artistRepository.findById(anyLong()))
@@ -388,6 +483,24 @@ class ArtistServiceUnitTest {
     }
 
     // Cambiar estado del artista
+    //security
+    @Test
+    @DisplayName("CP03-HU26 - No permite cambiar estado si no es dueño ni admin")
+    void testToggleArtistStatusNotOwnerOrAdminThrowsException() {
+        when(artistRepository.findById(1L)).thenReturn(Optional.of(testArtist));
+        // Usuario que NO es el dueño ni admin
+        User otroUsuario = new User();
+        otroUsuario.setId(2L);
+        otroUsuario.setUsername("otroUsuario");
+        otroUsuario.setUserRoleName("USER");
+        when(userRepository.findById(2L)).thenReturn(Optional.of(otroUsuario));
+
+        // userId "2" no es dueño ni admin
+        assertThrows(org.springframework.security.access.AccessDeniedException.class, () ->
+                artistService.toggleArtistActiveStatus(1L, "2")
+        );
+    }
+
     @Test
     @DisplayName("CP01-HU26 - Cambiar estado de actividad exitosamente")
     void testToggleArtistStatusSuccessfully() {
@@ -398,7 +511,7 @@ class ArtistServiceUnitTest {
                 .thenReturn(testArtist);
 
         // Act
-        artistService.toggleArtistActiveStatus(1L);
+        artistService.toggleArtistActiveStatus(1L, "1"); // "1" es el id del dueño
 
         // Assert
         verify(artistRepository).findById(1L);
@@ -416,7 +529,7 @@ class ArtistServiceUnitTest {
 
         // Act & Assert
         Exception exception = assertThrows(ArtistNotFoundException.class, () ->
-                artistService.toggleArtistActiveStatus(1L));
+                artistService.toggleArtistActiveStatus(1L, "testUser"));
         assertEquals("Artista no encontrado con ID: 1", exception.getMessage());
         verify(artistRepository).findById(1L);
         verifyNoMoreInteractions(artistRepository);

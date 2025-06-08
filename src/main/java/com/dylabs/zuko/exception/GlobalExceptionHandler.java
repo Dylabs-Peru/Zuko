@@ -128,6 +128,15 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Datos inválidos");
+        problem.setType(URI.create("/errors/invalid-argument"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
     @ExceptionHandler(SongAlreadyExistException.class)
     public ProblemDetail handleSongAlreadyExists(SongAlreadyExistException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());

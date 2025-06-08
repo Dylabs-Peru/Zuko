@@ -62,6 +62,10 @@ public class ArtistService {
             artist.setName(request.name());
         }
 
+        if (request.country() != null && request.country().trim().isEmpty()) {
+            throw new IllegalArgumentException("El país no puede estar vacío.");
+        }
+
         if (request.country() != null) {
             artist.setCountry(request.country());
         }
@@ -73,6 +77,25 @@ public class ArtistService {
         Artist updatedArtist = artistRepository.save(artist);
         return artistMapper.toResponse(updatedArtist);
     }
+
+    // Nuevo método sobrecargado para validar dueño
+    public ArtistResponse updateArtist(Long id, UpdateArtistRequest request, String username) {
+        Artist artist = artistRepository.findById(id)
+                .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
+
+        // Validar dueño o admin
+        if (!artist.getUser().getId().toString().equals(username)) {
+            // Buscar si el usuario es admin
+            User user = userRepository.findById(Long.valueOf(username))
+                    .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado para el id: " + username));
+            if (!"ADMIN".equalsIgnoreCase(user.getUserRoleName())) {
+                throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para editar este artista");
+            }
+        }
+        // Reutiliza la lógica existente
+        return updateArtist(id, request);
+    }
+
     // Obtener todos los artistas
     public List<ArtistResponse> getAllArtists() {
         List<Artist> artists = artistRepository.findAll();
@@ -92,15 +115,22 @@ public class ArtistService {
         return artistMapper.toResponseList(artists);
     }
 
-    public void toggleArtistActiveStatus(Long id) {
-        // 1. Buscar el artista por su ID
+    // Nuevo método seguro para alternar el estado solo si es dueño o ADMIN
+    public void toggleArtistActiveStatus(Long id, String username) {
         Artist artist = artistRepository.findById(id)
                 .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
 
-        // 2. Alternar el estado de isActive del ARTISTA
+        // Si el usuario NO es el dueño y NO es admin, denegar
+        if (!artist.getUser().getId().toString().equals(username)) {
+            // Buscar si el usuario es admin
+            User user = userRepository.findById(Long.valueOf(username))
+                    .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado para el id: " + username));
+            if (!"ADMIN".equalsIgnoreCase(user.getUserRoleName())) {
+                throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para cambiar el estado de este artista");
+            }
+        }
+        // Alternar el estado
         artist.setIsActive(!artist.getIsActive());
-
-        // 3. Guardar el artista con el nuevo estado
         artistRepository.save(artist);
     }
 
