@@ -5,6 +5,7 @@ import com.dylabs.zuko.dto.request.UpdateArtistRequest;
 import com.dylabs.zuko.dto.response.ArtistResponse;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistAlreadyExistsException;
+import com.dylabs.zuko.exception.artistExeptions.ArtistValidationException;
 import com.dylabs.zuko.mapper.ArtistMapper;
 import com.dylabs.zuko.model.Artist;
 import com.dylabs.zuko.model.User;
@@ -93,18 +94,18 @@ class ArtistServiceUnitTest {
                 .thenReturn(testArtist);
         when(artistMapper.toResponse(any()))
                 .thenReturn(new ArtistResponse(
-                        1L, // id
-                        "Test Artist", // name
-                        "Test Country", // country
-                        "Test Biography", // biography
-                        1L, // userId
-                        true // isActive
+                        1L,
+                        "Test Artist",
+                        "Test Country",
+                        "Test Biography",
+                        1L,
+                        true
                 ));
 
-        // Act
+
         ArtistResponse response = artistService.createArtist(createRequest, "testUser");
 
-        // Assert
+
         assertNotNull(response);
         verify(artistRepository, times(1)).save(any());
     }
@@ -112,13 +113,13 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP02-HU07 - Usuario ya tiene artista")
     void testCreateArtistWhenUserAlreadyHasArtist() {
-        // Arrange
+
         when(userRepository.findByUsername(anyString()))
                 .thenReturn(Optional.of(testUser));
         when(artistRepository.findByUserId(anyLong()))
                 .thenReturn(Optional.of(testArtist));
 
-        // Act & Assert
+
         assertThrows(ArtistAlreadyExistsException.class, () ->
                 artistService.createArtist(createRequest, "testUser"));
     }
@@ -126,13 +127,13 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP03-HU07 - Nombre de artista duplicado")
     void testCreateArtistWhenNameAlreadyExists() {
-        // Arrange
+
         when(userRepository.findByUsername(anyString()))
                 .thenReturn(Optional.of(testUser));
         when(artistRepository.findByName(anyString()))
                 .thenReturn(Optional.of(testArtist));
 
-        // Act & Assert
+
         assertThrows(ArtistAlreadyExistsException.class, () ->
                 artistService.createArtist(createRequest, "testUser"));
     }
@@ -140,7 +141,7 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP04-HU07 - País vacío")
     void testCreateArtistWhenCountryIsEmpty() {
-        // Arrange
+
         CreateArtistRequest request = new CreateArtistRequest(
                 "Test Artist",
                 "",
@@ -161,10 +162,10 @@ class ArtistServiceUnitTest {
                         1L, "Test Artist", "", "Test Biography", 1L, true
                 ));
 
-        // Act
+
         ArtistResponse response = artistService.createArtist(request, "testUser");
 
-        // Assert
+
         assertNotNull(response);
         assertEquals("", response.country());
         verify(artistRepository, times(1)).save(any());
@@ -183,18 +184,18 @@ class ArtistServiceUnitTest {
                 .thenReturn(testArtist);
         when(artistMapper.toResponse(testArtist))
                 .thenReturn(new ArtistResponse(
-                        1L, // id
-                        "Updated Artist", // name
-                        "Updated Country", // country
-                        "Updated Biography", // biography
-                        1L, // userId
-                        true // isActive
+                        1L,
+                        "Updated Artist",
+                        "Updated Country",
+                        "Updated Biography",
+                        1L,
+                        true
                 ));
 
-        // Act
+
         ArtistResponse response = artistService.updateArtist(1L, updateRequest);
 
-        // Assert
+
         assertNotNull(response);
         assertEquals("Updated Artist", response.name());
         assertEquals("Updated Country", response.country());
@@ -209,13 +210,13 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP02-HU08 - Cambio de nombre en uso")
     void testUpdateArtistWhenNameAlreadyExists() {
-        // Arrange
+
         when(artistRepository.findById(anyLong()))
                 .thenReturn(Optional.of(testArtist));
         when(artistRepository.findByName(anyString()))
                 .thenReturn(Optional.of(testArtist));
 
-        // Act & Assert
+
         assertThrows(ArtistAlreadyExistsException.class, () ->
                 artistService.updateArtist(1L, updateRequest));
     }
@@ -223,11 +224,11 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP03-HU08 - Artista no encontrado para editar")
     void testUpdateArtistWhenArtistNotFound() {
-        // Arrange
+
         when(artistRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
 
-        // Act & Assert
+
         assertThrows(ArtistNotFoundException.class, () ->
                 artistService.updateArtist(1L, updateRequest));
     }
@@ -242,7 +243,7 @@ class ArtistServiceUnitTest {
         ));
 
         UpdateArtistRequest req = new UpdateArtistRequest(
-                null, // nombre null
+                null,
                 "Test Country",
                 "Test Biography"
         );
@@ -250,7 +251,7 @@ class ArtistServiceUnitTest {
         ArtistResponse response = artistService.updateArtist(1L, req);
 
         assertNotNull(response);
-        assertEquals("Test Artist", response.name()); // No cambia
+        assertEquals("Test Artist", response.name());
     }
 
     @Test
@@ -282,7 +283,7 @@ class ArtistServiceUnitTest {
         ArtistResponse response = artistService.updateArtist(1L, req);
 
         assertNotNull(response);
-        assertEquals("Test Country", response.country()); // No cambia
+        assertEquals("Test Country", response.country());
     }
 
     @Test
@@ -295,11 +296,11 @@ class ArtistServiceUnitTest {
 
         UpdateArtistRequest req = new UpdateArtistRequest(
                 "Test Artist",
-                "", // país vacío
+                "",
                 "Test Biography"
         );
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(ArtistValidationException.class, () ->
                 artistService.updateArtist(1L, req, "1")
         );
     }
@@ -327,7 +328,7 @@ class ArtistServiceUnitTest {
         UpdateArtistRequest req = new UpdateArtistRequest(
                 "Test Artist",
                 "Test Country",
-                null // biografía null
+                null
         );
 
         ArtistResponse response = artistService.updateArtist(1L, req);
@@ -340,7 +341,7 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP07-HU08- Solo el dueño puede editar su artista")
     void testUpdateArtistOnlyOwnerCanEdit() {
-        // El artista pertenece al usuario 1 (dueño)
+
         testArtist.setUser(new User());
         testArtist.getUser().setId(1L);
         testArtist.getUser().setUserRoleName("USER");
@@ -364,7 +365,7 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP08-HU08- No permite editar si no es el dueño")
     void testUpdateArtistNotOwnerThrowsException() {
-        // El artista pertenece a otro usuario (99), autenticado es 2 (USER)
+
         testArtist.setUser(new User());
         testArtist.getUser().setId(99L);
         testArtist.getUser().setUserRoleName("USER");
@@ -386,7 +387,7 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP09-HU08- Admin puede editar cualquier artista")
     void testUpdateArtistAdminCanEditAnyArtist() {
-        // El artista pertenece a otro usuario (99), autenticado es 1 (ADMIN)
+
         testArtist.setUser(new User());
         testArtist.getUser().setId(99L);
         testArtist.getUser().setUserRoleName("USER");
@@ -414,7 +415,7 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP01-HU09- Listar todos los artistas")
     void testGetAllArtists() {
-        // Arrange
+
         when(artistRepository.findAll())
                 .thenReturn(List.of(testArtist));
         when(artistMapper.toResponseList(any()))
@@ -427,10 +428,10 @@ class ArtistServiceUnitTest {
                         true
                 )));
 
-        // Act
+
         List<ArtistResponse> response = artistService.getAllArtists();
 
-        // Assert
+
         assertNotNull(response);
         assertFalse(response.isEmpty());
         assertEquals(1, response.size());
@@ -443,23 +444,22 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP02-HU09- Buscar artista por ID existente")
     void testGetArtistById() {
-        // Arrange
+
         when(artistRepository.findById(anyLong()))
                 .thenReturn(Optional.of(testArtist));
         when(artistMapper.toResponse(any()))
                 .thenReturn(new ArtistResponse(
-                        1L, // id
-                        "Test Artist", // name
-                        "Test Country", // country
-                        "Test Biography", // biography
-                        1L, // userId
-                        true // isActive
+                        1L,
+                        "Test Artist",
+                        "Test Country",
+                        "Test Biography",
+                        1L,
+                        true
                 ));
 
-        // Act
+
         ArtistResponse response = artistService.getArtistById(1L);
 
-        // Assert
         assertNotNull(response);
         verify(artistRepository, times(1)).findById(anyLong());
         verify(artistMapper, times(1)).toResponse(any());
@@ -468,16 +468,16 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP03-HU09 - Buscar artista no existente")
     void testSearchArtistsWhenNotFound() {
-        // Arrange
+
         when(artistRepository.findByNameContainingIgnoreCase(anyString()))
                 .thenReturn(List.of());
         when(artistMapper.toResponseList(anyList()))
                 .thenReturn(List.of());
 
-        // Act
+
         List<ArtistResponse> response = artistService.searchArtistsByName("nonexistent");
 
-        // Assert
+
         assertNotNull(response);
         assertTrue(response.isEmpty());
     }
@@ -488,14 +488,14 @@ class ArtistServiceUnitTest {
     @DisplayName("CP03-HU26 - No permite cambiar estado si no es dueño ni admin")
     void testToggleArtistStatusNotOwnerOrAdminThrowsException() {
         when(artistRepository.findById(1L)).thenReturn(Optional.of(testArtist));
-        // Usuario que NO es el dueño ni admin
+
         User otroUsuario = new User();
         otroUsuario.setId(2L);
         otroUsuario.setUsername("otroUsuario");
         otroUsuario.setUserRoleName("USER");
         when(userRepository.findById(2L)).thenReturn(Optional.of(otroUsuario));
 
-        // userId "2" no es dueño ni admin
+
         assertThrows(org.springframework.security.access.AccessDeniedException.class, () ->
                 artistService.toggleArtistActiveStatus(1L, "2")
         );
@@ -504,16 +504,15 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP01-HU26 - Cambiar estado de actividad exitosamente")
     void testToggleArtistStatusSuccessfully() {
-        // Arrange
+
         when(artistRepository.findById(1L))
                 .thenReturn(Optional.of(testArtist));
         when(artistRepository.save(any()))
                 .thenReturn(testArtist);
 
-        // Act
-        artistService.toggleArtistActiveStatus(1L, "1"); // "1" es el id del dueño
 
-        // Assert
+        artistService.toggleArtistActiveStatus(1L, "1");
+
         verify(artistRepository).findById(1L);
         verify(artistRepository).save(any());
         verifyNoMoreInteractions(artistRepository);
@@ -523,11 +522,11 @@ class ArtistServiceUnitTest {
     @Test
     @DisplayName("CP02-HU26 - Artista no encontrado para cambiar estado")
     void testToggleArtistStatusWhenArtistNotFound() {
-        // Arrange
+
         when(artistRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
-        // Act & Assert
+
         Exception exception = assertThrows(ArtistNotFoundException.class, () ->
                 artistService.toggleArtistActiveStatus(1L, "testUser"));
         assertEquals("Artista no encontrado con ID: 1", exception.getMessage());
