@@ -9,6 +9,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,11 +33,14 @@ public class ArtistController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<ArtistResponse> updateArtist(
             @PathVariable Long id,
-            @Valid @RequestBody UpdateArtistRequest request
+            @Valid @RequestBody UpdateArtistRequest request,
+            Authentication authentication
     ) {
-        ArtistResponse updated = artistService.updateArtist(id, request);
+        String username = authentication.getName();
+        ArtistResponse updated = artistService.updateArtist(id, request, username);
         return ResponseEntity.ok(updated);
     }
 
@@ -56,9 +61,12 @@ public class ArtistController {
         return ResponseEntity.ok(new ApiResponse<>("Artista encontrado", artist));
     }
 
+
     @PatchMapping("/{id}/toggle-active")
-    public ResponseEntity<String> toggleArtistActiveStatus(@PathVariable Long id) {
-        artistService.toggleArtistActiveStatus(id);
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public ResponseEntity<String> toggleArtistActiveStatus(@PathVariable Long id, Authentication authentication) {
+        String username = authentication.getName();
+        artistService.toggleArtistActiveStatus(id, username);
         return ResponseEntity.ok("Estado de actividad del artista actualizado correctamente.");
     }
 }

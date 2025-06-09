@@ -14,6 +14,7 @@ import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistAlreadyExistsException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
+import com.dylabs.zuko.exception.artistExeptions.ArtistValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
@@ -124,6 +125,15 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setTitle("Artist Not Found");
         problem.setType(URI.create("/errors/artist-not-found"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
+    @ExceptionHandler(ArtistValidationException.class)
+    public ProblemDetail handleArtistValidation(com.dylabs.zuko.exception.artistExeptions.ArtistValidationException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Error de validación de artista");
+        problem.setType(URI.create("/errors/artist-validation"));
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }

@@ -4,6 +4,7 @@ import com.dylabs.zuko.dto.request.CreateArtistRequest;
 import com.dylabs.zuko.dto.response.ArtistResponse;
 import com.dylabs.zuko.exception.artistExeptions.ArtistAlreadyExistsException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
+import com.dylabs.zuko.exception.artistExeptions.ArtistValidationException;
 import com.dylabs.zuko.dto.request.UpdateArtistRequest;
 import com.dylabs.zuko.mapper.ArtistMapper;
 import com.dylabs.zuko.model.Artist;
@@ -23,34 +24,31 @@ public class ArtistService {
     private final ArtistMapper artistMapper;
     private final UserRepository userRepository;
 
+    //Crear artista
     public ArtistResponse createArtist(CreateArtistRequest request, String username) {
-        // 1. Buscar al usuario por su username
         User currentUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado para el nombre: " + username));
 
-        // 2. Verificar si el nombre del artista ya está en uso
         if (artistRepository.findByName(request.name()).isPresent()) {
             throw new ArtistAlreadyExistsException("El nombre del artista ya está en uso.");
         }
 
-        // 3. Verificar si el usuario ya tiene un artista registrado
         if (artistRepository.findByUserId(currentUser.getId()).isPresent()) {
             throw new ArtistAlreadyExistsException("El usuario ya tiene un artista registrado.");
         }
 
-        // 4. Mapear y guardar el nuevo artista
         Artist artist = artistMapper.toEntity(request, currentUser);
         artist.setIsActive(true);
-
         Artist savedArtist = artistRepository.save(artist);
 
         return artistMapper.toResponse(savedArtist);
     }
+
+    //Actualizar artista
     public ArtistResponse updateArtist(Long id, UpdateArtistRequest request) {
         Artist artist = artistRepository.findById(id)
                 .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
 
-        // Validar si el nombre ya está en uso por otro artista
         if (request.name() != null && !request.name().equals(artist.getName())) {
             artistRepository.findByName(request.name()).ifPresent(existingArtist -> {
                 throw new ArtistAlreadyExistsException("El nombre del artista ya está en uso.");
@@ -60,6 +58,10 @@ public class ArtistService {
 
         if (request.name() != null) {
             artist.setName(request.name());
+        }
+
+        if (request.country() != null && request.country().trim().isEmpty()) {
+            throw new ArtistValidationException("El país no puede estar vacío.");
         }
 
         if (request.country() != null) {
@@ -73,34 +75,52 @@ public class ArtistService {
         Artist updatedArtist = artistRepository.save(artist);
         return artistMapper.toResponse(updatedArtist);
     }
+
+    // Para validar al dueño
+    public ArtistResponse updateArtist(Long id, UpdateArtistRequest request, String username) {
+        Artist artist = artistRepository.findById(id)
+                .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
+
+        if (!artist.getUser().getId().toString().equals(username)) {
+            User user = userRepository.findById(Long.valueOf(username))
+                    .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado para el id: " + username));
+            if (!"ADMIN".equalsIgnoreCase(user.getUserRoleName())) {
+                throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para editar este artista");
+            }
+        }
+        return updateArtist(id, request);
+    }
+
     // Obtener todos los artistas
     public List<ArtistResponse> getAllArtists() {
         List<Artist> artists = artistRepository.findAll();
         return artistMapper.toResponseList(artists);
     }
 
-    // Obtener un artista por ID
     public ArtistResponse getArtistById(Long id) {
         Artist artist = artistRepository.findById(id)
                 .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
         return artistMapper.toResponse(artist);
     }
 
-    // obtener artista por nombre
     public List<ArtistResponse> searchArtistsByName(String name) {
         List<Artist> artists = artistRepository.findByNameContainingIgnoreCase(name);
         return artistMapper.toResponseList(artists);
     }
 
-    public void toggleArtistActiveStatus(Long id) {
-        // 1. Buscar el artista por su ID
+    // Para alternar el estado del artista
+    public void toggleArtistActiveStatus(Long id, String username) {
         Artist artist = artistRepository.findById(id)
                 .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + id));
 
-        // 2. Alternar el estado de isActive del ARTISTA
+        if (!artist.getUser().getId().toString().equals(username)) {
+            User user = userRepository.findById(Long.valueOf(username))
+                    .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado para el id: " + username));
+            if (!"ADMIN".equalsIgnoreCase(user.getUserRoleName())) {
+                throw new org.springframework.security.access.AccessDeniedException("No tienes permiso para cambiar el estado de este artista");
+            }
+        }
         artist.setIsActive(!artist.getIsActive());
-
-        // 3. Guardar el artista con el nuevo estado
         artistRepository.save(artist);
     }
 
