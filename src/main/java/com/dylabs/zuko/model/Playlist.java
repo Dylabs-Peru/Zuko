@@ -2,7 +2,6 @@ package com.dylabs.zuko.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 

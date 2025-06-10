@@ -6,14 +6,10 @@ import com.dylabs.zuko.dto.response.SongResponse;
 import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
 import com.dylabs.zuko.model.Playlist;
 import com.dylabs.zuko.model.Song;
-import com.dylabs.zuko.model.User;
 import com.dylabs.zuko.repository.SongRepository;
 import com.dylabs.zuko.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
