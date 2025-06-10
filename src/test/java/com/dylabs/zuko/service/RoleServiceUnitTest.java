@@ -120,6 +120,13 @@ class RoleServiceTest {
     }
 
     @Test
+    void getRoles_AsNonAdmin_ThrowsAccessDenied() {
+        when(authentication.getName()).thenReturn("2");
+        when(userRepository.findById(2L)).thenReturn(Optional.of(normalUser));
+        assertThrows(AccessDeniedException.class, () -> roleService.getRoles());
+    }
+
+    @Test
     void updateRole_Success() {
         CreateRoleRequest request = new CreateRoleRequest("ADMIN", "Admin");
         Role role = new Role(1L, "MOD", "Mod");
@@ -152,6 +159,41 @@ class RoleServiceTest {
     }
 
     @Test
+    void updateRole_RoleNotFound_ThrowsException() {
+        when(authentication.getName()).thenReturn("1");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(adminUser));
+        when(roleRepository.findById(99L)).thenReturn(Optional.empty());
+        CreateRoleRequest req = new CreateRoleRequest("ADMIN", "Admin");
+        assertThrows(RoleNotFoundException.class, () -> roleService.updateRole(99L, req));
+    }
+
+    @Test
+    void updateRole_SameName_DoesNotThrow() {
+        CreateRoleRequest request = new CreateRoleRequest("MOD", "Mod");
+        Role role = new Role(1L, "MOD", "Mod");
+        when(authentication.getName()).thenReturn("1");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(adminUser));
+        when(roleRepository.findById(1L)).thenReturn(Optional.of(role));
+        when(roleRepository.existsByRoleNameIgnoreCase("MOD")).thenReturn(true);
+        when(roleRepository.save(any())).thenReturn(role);
+        when(roleMapper.toResponse(any())).thenReturn(new RoleResponse(1L, "MOD", "Mod"));
+        assertDoesNotThrow(() -> roleService.updateRole(1L, request));
+    }
+
+    @Test
+    void updateRole_SameNameDifferentCase_DoesNotThrow() {
+        CreateRoleRequest request = new CreateRoleRequest("mod", "Mod");
+        Role role = new Role(1L, "MOD", "Mod");
+        when(authentication.getName()).thenReturn("1");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(adminUser));
+        when(roleRepository.findById(1L)).thenReturn(Optional.of(role));
+        when(roleRepository.existsByRoleNameIgnoreCase("mod")).thenReturn(true);
+        when(roleRepository.save(any())).thenReturn(role);
+        when(roleMapper.toResponse(any())).thenReturn(new RoleResponse(1L, "mod", "Mod"));
+        assertDoesNotThrow(() -> roleService.updateRole(1L, request));
+    }
+
+    @Test
     void deleteRole_Success() {
         when(authentication.getName()).thenReturn("1");
         when(userRepository.findById(1L)).thenReturn(Optional.of(adminUser));
@@ -171,10 +213,17 @@ class RoleServiceTest {
     }
 
     @Test
+    void deleteRole_AsNonAdmin_ThrowsAccessDenied() {
+        when(authentication.getName()).thenReturn("2");
+        when(userRepository.findById(2L)).thenReturn(Optional.of(normalUser));
+        assertThrows(AccessDeniedException.class, () -> roleService.deleteRole(1L));
+    }
+
+    @Test
     void getAuthenticatedUser_NotFound_ThrowsException() {
         when(authentication.getName()).thenReturn("99");
         when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThrows(UserNotFoundExeption.class, () -> roleService.createRole(new CreateRoleRequest("R", "desc")));
     }
-} 
+}
