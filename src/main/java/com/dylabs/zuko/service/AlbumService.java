@@ -14,10 +14,13 @@ import com.dylabs.zuko.model.Album;
 import com.dylabs.zuko.model.Artist;
 import com.dylabs.zuko.model.Genre;
 import com.dylabs.zuko.model.Song;
+import com.dylabs.zuko.model.User;
 import com.dylabs.zuko.repository.AlbumRepository;
 import com.dylabs.zuko.repository.ArtistRepository;
 import com.dylabs.zuko.repository.GenreRepository;
+import com.dylabs.zuko.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -33,103 +36,109 @@ public class AlbumService {
     private final GenreRepository genreRepository;
     private final AlbumMapper albumMapper;
     private final SongMapper songMapper;
+    private final UserRepository userRepository;
 
-    // Metodo para crear un álbum
-    public AlbumResponse createAlbum(AlbumRequest request) {
-        // Buscar el artista y el género
-        Artist artist = artistRepository.findById(request.artistId())
-                .orElseThrow(() -> new ArtistNotFoundException("El artista no fue encontrado."));
+    public AlbumResponse createAlbum(AlbumRequest request, String userIdFromToken) {
+        User user = userRepository.findById(Long.parseLong(userIdFromToken))
+                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado"));
+
+        Artist artist;
+        if ("ADMIN".equalsIgnoreCase(user.getUserRoleName())) {
+            artist = artistRepository.findById(request.artistId())
+                    .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + request.artistId()));
+        } else {
+            artist = artistRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new ArtistNotFoundException("No tienes un perfil de artista."));
+            if (!artist.getId().equals(request.artistId())) {
+                throw new AlbumPermissionException("No puedes crear un álbum para otro artista.");
+            }
+        }
+
         Genre genre = genreRepository.findById(request.genreId())
                 .orElseThrow(() -> new GenreNotFoundException("El género no fue encontrado."));
 
-        // Verificar si el álbum ya existe para ese artista
-        boolean exists = albumRepository.existsByTitleIgnoreCaseAndArtistId(request.title(), artist.getId());
-        if (exists) {
+        if (albumRepository.existsByTitleIgnoreCaseAndArtistId(request.title(), artist.getId())) {
             throw new AlbumAlreadyExistsException("El título del álbum ya existe para este artista.");
         }
 
-        // Validar que el álbum contenga al menos dos canciones
         if (request.songs() == null || request.songs().size() < 2) {
             throw new AlbumValidationException("El álbum debe contener al menos dos canciones.");
         }
 
-        // Convertir el DTO de solicitud a entidad de álbum
         Album album = albumMapper.toAlbumEntity(request, artist, genre);
-
-        // Asignar las canciones al álbum
-        List<Song> songList = request.songs().stream()
-                .map(songRequest -> songMapper.toSongEntity(songRequest, artist)) // Aquí se usa el artista
-                .collect(Collectors.toList());
-        album.setSongs(songList);
-
-        // Establecer fechas
         album.setReleaseDate(LocalDate.now());
         album.setCreationDate(LocalDate.now());
-
-        // Guardar el álbum en la base de datos
         albumRepository.save(album);
 
         return albumMapper.toResponse(album);
     }
 
-    // Método para obtener un álbum por su ID
+
     public AlbumResponse getAlbumById(Long id) {
         Album album = albumRepository.findById(id)
                 .orElseThrow(() -> new AlbumNotFoundException("Álbum no disponible."));
         return albumMapper.toResponse(album);
     }
 
-    // Metodo para actualizar un álbum existente
-    public AlbumResponse updateAlbum(Long id, AlbumRequest request) {
-        // Buscar el álbum y el artista
+
+    public AlbumResponse updateAlbum(Long id, AlbumRequest request, String userIdFromToken) {
         Album album = albumRepository.findById(id)
                 .orElseThrow(() -> new AlbumNotFoundException("Álbum no disponible."));
-        Artist artist = artistRepository.findById(request.artistId())
-                .orElseThrow(() -> new ArtistNotFoundException("El artista no fue encontrado."));
+        User user = userRepository.findById(Long.parseLong(userIdFromToken))
+                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado"));
 
-        // Verificar que el artista que intenta editar el álbum sea el mismo que el creador
-        if (!album.getArtist().getId().equals(artist.getId())) {
-            throw new AlbumPermissionException("No tienes permiso para editar este álbum.");
+        Artist artist;
+        if ("ADMIN".equalsIgnoreCase(user.getUserRoleName())) {
+            artist = artistRepository.findById(request.artistId())
+                    .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + request.artistId()));
+        } else {
+            artist = artistRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new ArtistNotFoundException("No tienes un perfil de artista."));
+            if (!album.getArtist().getId().equals(artist.getId())) {
+                throw new AccessDeniedException("No puedes modificar este álbum.");
+            }
         }
 
-        // Buscar el género
         Genre genre = genreRepository.findById(request.genreId())
                 .orElseThrow(() -> new GenreNotFoundException("El género no fue encontrado."));
 
-        // Validar que el álbum contenga al menos dos canciones
-        if (request.songs() == null || request.songs().size() < 2) {
-            throw new AlbumValidationException("El álbum debe contener al menos dos canciones.");
-        }
-
-        // Validar que al editar el nombre del álbum no coincida con uno ya existente
-        boolean existsWithSameTitle = albumRepository
-                .existsByTitleIgnoreCaseAndArtistIdAndIdNot(request.title(), artist.getId(), album.getId());
-
+        boolean existsWithSameTitle = albumRepository.existsByTitleIgnoreCaseAndArtistIdAndIdNot(
+                request.title(), artist.getId(), album.getId());
         if (existsWithSameTitle) {
             throw new AlbumAlreadyExistsException("El título del álbum ya existe para este artista.");
         }
 
-        // Usar el mapper para actualizar los campos del álbum y las canciones
-        albumMapper.updateAlbumFromRequest(album, request, genre, artist); // Pasar el artista al mapper
+        if (request.songs() == null || request.songs().size() < 2) {
+            throw new AlbumValidationException("El álbum debe contener al menos dos canciones.");
+        }
 
-        // Guardar el álbum actualizado en la base de datos
+        albumMapper.updateAlbumFromRequest(album, request, genre, artist);
         albumRepository.save(album);
 
         return albumMapper.toResponse(album);
     }
 
-    // Metodo para eliminar un álbum por su ID
-    public void deleteAlbum(Long id, Long artistId) {
+
+
+    public void deleteAlbum(Long id, String userIdFromToken) {
+        // Buscar el álbum por ID
         Album album = albumRepository.findById(id)
                 .orElseThrow(() -> new AlbumNotFoundException("Álbum no disponible."));
 
-        Artist artist = artistRepository.findById(artistId)
-                .orElseThrow(() -> new ArtistNotFoundException("El artista no fue encontrado."));
+        User user = userRepository.findById(Long.parseLong(userIdFromToken))
+                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado"));
 
-        if (!album.getArtist().getId().equals(artist.getId())) {
-            throw new AlbumPermissionException("No tienes permiso para eliminar este álbum.");
+        if (!"ADMIN".equalsIgnoreCase(user.getUserRoleName())) {
+            Artist artist = artistRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new ArtistNotFoundException("No tienes un perfil de artista."));
+
+            if (!album.getArtist().getId().equals(artist.getId())) {
+
+                throw new AlbumPermissionException("No puedes eliminar este álbum.");
+            }
         }
 
         albumRepository.delete(album);
     }
+
 }
