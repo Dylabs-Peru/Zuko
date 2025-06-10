@@ -3,8 +3,11 @@ package com.dylabs.zuko.service;
 import com.dylabs.zuko.dto.request.PlaylistRequest;
 import com.dylabs.zuko.dto.response.PlaylistResponse;
 import com.dylabs.zuko.dto.response.SongResponse;
+import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.exception.playlistExceptions.PlaylistNotFoundException;
 import com.dylabs.zuko.exception.playlistExceptions.PlaylistAlreadyExistsException;
+import com.dylabs.zuko.exception.playlistExceptions.SongNotInPlaylistException;
+import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
 import com.dylabs.zuko.mapper.PlaylistMapper;
 import com.dylabs.zuko.model.Playlist;
 import com.dylabs.zuko.model.Song;
@@ -27,11 +30,9 @@ public class PlaylistService {
     private final UserRepository userRepository;
     private final PlaylistMapper playlistMapper;
 
-    // Crear una nueva Playlist
     public PlaylistResponse createPlaylist(Long id, PlaylistRequest playlistRequest) {
-        // Verificar si el usuario existe
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado con ID: " + id));
+                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado con ID: " + id));
 
         // Verificar si ya existe una playlist con el mismo nombre para el usuario
         if (playlistRepository.existsByNameIgnoreCaseAndUsers_id(playlistRequest.name(), id)) {
@@ -94,7 +95,7 @@ public class PlaylistService {
                 .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + id));
 
         Song song = songRepository.findById(songId)
-                .orElseThrow(() -> new IllegalArgumentException("Canción no encontrada con ID: " + songId));
+                .orElseThrow(() -> new SongNotFoundException("Canción no encontrada con ID: " + songId));
 
         // Agregar la canción y guardar
         playlist.getSongs().add(song);
@@ -108,11 +109,11 @@ public class PlaylistService {
                 .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId + " para el usuario con ID: " + id));
 
         Song song = songRepository.findById(songId)
-                .orElseThrow(() -> new IllegalArgumentException("Canción no encontrada con ID: " + songId));
+                .orElseThrow(() -> new SongNotFoundException("Canción no encontrada con ID: " + songId));
 
         // Eliminar la canción y guardar
         if (!playlist.getSongs().remove(song)) {
-            throw new IllegalArgumentException("La canción con ID: " + songId + " no pertenece a la Playlist.");
+            throw new SongNotInPlaylistException("La canción con ID: " + songId + " no pertenece a la Playlist.");
         }
 
         playlistRepository.save(playlist);
