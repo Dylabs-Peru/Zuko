@@ -1158,5 +1158,141 @@ public class UserServiceUnitTest {
 
         mockAuthenticatedUser(userId, "User");}
 
+    @Test
+    @DisplayName("CPXX-HU25 - Toggle user active status from active to inactive")
+    void testToggleUserActiveStatus_FromActiveToInactive() {
+        Long userId = 2L;
+        User user = new User();
+        user.setId(userId);
+        user.setUsername("testUser2");
+        user.setActive(true); // Initially active
+        user.setUserRole(new Role());
+        user.getUserRole().setRoleName("User");
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        mockAuthenticatedUser(100L, "Admin");
+
+        userService.toggleUserActiveStatus(userId);
+
+        assertFalse(user.getIsActive()); // Now should be inactive
+        verify(userRepository).findById(userId);
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void testUpdateUser_UsernameExistsButSameUser() {
+        Long userId = 1L;
+        String username = "existingUsername";
+        UpdateUserRequest updateRequest = new UpdateUserRequest(username, null, null, null, null, null);
+
+        User userToUpdate = new User();
+        userToUpdate.setId(userId);
+        userToUpdate.setUsername("originalUsername");
+        userToUpdate.setUserRole(new Role());
+        userToUpdate.getUserRole().setRoleName("User");
+
+        User existingUser = new User();
+        existingUser.setId(userId); // Same ID as userToUpdate
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userToUpdate));
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(existingUser));
+
+        // Mock authenticated user as the same user (not admin)
+        mockAuthenticatedUser(userId, "User");
+
+        // Should NOT throw exception, since it's the same user
+        assertDoesNotThrow(() -> userService.updateUser(userId, updateRequest));
+    }
+
+    @Test
+    void testUpdateUser_UsernameExistsButSameUserrr() {
+        Long userId = 1L;
+        String username = "existingUsername";
+        UpdateUserRequest updateRequest = new UpdateUserRequest(username, null, null, null, null, null);
+
+        User userToUpdate = new User();
+        userToUpdate.setId(userId);
+        userToUpdate.setUsername("originalUsername");
+        userToUpdate.setUserRole(new Role());
+        userToUpdate.getUserRole().setRoleName("User");
+
+        User existingUser = new User();
+        existingUser.setId(userId); // Same ID as userToUpdate
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userToUpdate));
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(existingUser));
+
+        // Mock authenticated user as the same user (not admin)
+        mockAuthenticatedUser(userId, "User");
+
+        // Should NOT throw exception, since it's the same user
+        assertDoesNotThrow(() -> userService.updateUser(userId, updateRequest));
+    }
+
+    @Test
+    void testUpdateUser_AdminWithNullRoleName() {
+        Long userId = 1L;
+        UpdateUserRequest updateRequest = new UpdateUserRequest(null, null, null, null, null, null);
+
+        Role role = new Role();
+        role.setRoleName("User");
+
+        User userToUpdate = new User();
+        userToUpdate.setId(userId);
+        userToUpdate.setUserRole(role);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userToUpdate));
+        when(userRepository.save(userToUpdate)).thenReturn(userToUpdate);
+        when(userMapper.toResponse(userToUpdate)).thenReturn(
+                new UserResponse(userId, null, null, null, null, "User", false)
+        );
+
+        // Mock authenticated user as admin
+        mockAuthenticatedUser(100L, "Admin");
+
+        UserResponse response = userService.updateUser(userId, updateRequest);
+
+        assertNotNull(response);
+        verify(userRepository).save(userToUpdate);
+    }
+
+    @Test
+    void testGetAuthenticatedUser_UserNotFound() {
+        Long authUserId = 999L;
+        // Mock authenticated user
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn(authUserId.toString());
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        when(userRepository.findById(authUserId)).thenReturn(Optional.empty());
+
+        // Use reflection to call the private method if needed, or trigger it via a public method
+        // For example, call a service method that uses getAuthenticatedUser()
+        assertThrows(UserNotFoundExeption.class, () -> userService.toggleUserActiveStatus(1L));
+    }
+    @Test
+    void testUpdateUser_EmailExistsButSameUser() {
+        Long userId = 1L;
+        String email = "existing@email.com";
+        UpdateUserRequest updateRequest = new UpdateUserRequest(null, email, null, null, null, null);
+
+        User userToUpdate = new User();
+        userToUpdate.setId(userId);
+        userToUpdate.setEmail("old@email.com");
+
+        User existingUser = new User();
+        existingUser.setId(userId); // Same ID
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(userToUpdate));
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(existingUser));
+
+        // Mock authenticated user as the same user
+        mockAuthenticatedUser(userId, "User");
+
+        assertDoesNotThrow(() -> userService.updateUser(userId, updateRequest));
+    }
+
 }
 
