@@ -1023,4 +1023,140 @@ public class UserServiceUnitTest {
         authUser.getUserRole().setRoleName(roleName);
         when(userRepository.findById(userId)).thenReturn(Optional.of(authUser));
     }
+
+    @Test
+    @DisplayName("CP08-HU17 - Actualizar usuario lanza RoleNotFoundException si el rol no existe")
+    void testUpdateUser_RoleNotFound() {
+        // Arrange
+        Long userId = 1L;
+        UpdateUserRequest updateRequest = new UpdateUserRequest(
+                null, null, null, null, null, "NonExistentRole"
+        );
+
+        Role currentRole = new Role();
+        currentRole.setRoleName("User");
+
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setUsername("originalUsername");
+        existingUser.setEmail("originalEmail@example.com");
+        existingUser.setUserRole(currentRole);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        // Mock authenticated user as admin
+        mockAuthenticatedUser(100L, "Admin");
+        when(roleRepository.findByRoleNameIgnoreCase("NonExistentRole")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        RoleNotFoundException exception = assertThrows(
+                RoleNotFoundException.class,
+                () -> userService.updateUser(userId, updateRequest)
+        );
+        assertEquals("Rol no encontrado: NonExistentRole", exception.getMessage());
+    }
+
+
+    @Test
+    @DisplayName("CP14-HU17 - Admin actualiza solo la descripción de un usuario")
+    void testUpdateUser_AdminChangeDescription() {
+        Long userId = 1L;
+        UpdateUserRequest updateRequest = new UpdateUserRequest(null, null, "Nueva descripción", null, null, null);
+        Role role = new Role();
+        role.setRoleName("User");
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setUsername("originalUsername");
+        existingUser.setUserRole(role);
+
+        UserResponse expectedResponse = new UserResponse(
+                userId, "originalUsername", null, "Nueva descripción", null, "User", false
+        );
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(existingUser)).thenReturn(existingUser);
+        when(userMapper.toResponse(existingUser)).thenReturn(expectedResponse);
+
+        mockAuthenticatedUser(100L, "Admin");
+
+        UserResponse response = userService.updateUser(userId, updateRequest);
+
+        assertNotNull(response);
+        assertEquals("Nueva descripción", response.description());
+        verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    @DisplayName("CP11-HU17 - Usuario edita su propio perfil sin cambios (todos los campos nulos)")
+    void testUpdateUser_UserNoChanges() {
+        Long userId = 1L;
+        UpdateUserRequest updateRequest = new UpdateUserRequest(null, null, null, null, null, null);
+        Role role = new Role();
+        role.setRoleName("User");
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setUsername("originalUsername");
+        existingUser.setUserRole(role);
+
+        UserResponse expectedResponse = new UserResponse(
+                userId, "originalUsername", null, null, null, "User", false
+        );
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(existingUser)).thenReturn(existingUser);}
+
+    @Test
+    @DisplayName("CP12-HU17 - Admin actualiza usuario sin cambiar el rol (roleName nulo)")
+    void testUpdateUser_AdminNoRoleChange() {
+        Long userId = 1L;
+        UpdateUserRequest updateRequest = new UpdateUserRequest("nuevoUsername", null, null, null, null, null);
+        Role role = new Role();
+        role.setRoleName("User");
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setUsername("originalUsername");
+        existingUser.setUserRole(role);
+
+        UserResponse expectedResponse = new UserResponse(
+                userId, "nuevoUsername", null, null, null, "User", false
+        );
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.findByUsername("nuevoUsername")).thenReturn(Optional.empty());
+        when(userRepository.save(existingUser)).thenReturn(existingUser);
+        when(userMapper.toResponse(existingUser)).thenReturn(expectedResponse);
+
+        mockAuthenticatedUser(100L, "Admin");
+
+        UserResponse response = userService.updateUser(userId, updateRequest);
+
+        assertNotNull(response);
+        assertEquals("nuevoUsername", response.username());
+        verify(userRepository).save(existingUser);
+    }
+
+    @Test
+    @DisplayName("CP13-HU17 - Usuario edita su propio perfil cambiando solo username")
+    void testUpdateUser_UserChangeUsername() {
+        Long userId = 1L;
+        UpdateUserRequest updateRequest = new UpdateUserRequest("nuevoUsername", null, null, null, null, null);
+        Role role = new Role();
+        role.setRoleName("User");
+        User existingUser = new User();
+        existingUser.setId(userId);
+        existingUser.setUsername("originalUsername");
+        existingUser.setUserRole(role);
+
+        UserResponse expectedResponse = new UserResponse(
+                userId, "nuevoUsername", null, null, null, "User", false
+        );
+
+        // Mock findById for both user to update and authenticated user
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.findByUsername("nuevoUsername")).thenReturn(Optional.empty());
+        when(userRepository.save(existingUser)).thenReturn(existingUser);
+        when(userMapper.toResponse(any(User.class))).thenReturn(expectedResponse);
+
+        mockAuthenticatedUser(userId, "User");}
+
 }
+
