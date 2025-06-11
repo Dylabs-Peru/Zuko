@@ -5,6 +5,7 @@ import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumPermissionException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumValidationException;
 import com.dylabs.zuko.exception.genreExeptions.GenreInUseException;
+import com.dylabs.zuko.exception.playlistExceptions.*;
 import com.dylabs.zuko.exception.roleExeptions.*;
 import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
 import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
@@ -17,6 +18,7 @@ import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.exception.artistExeptions.ArtistValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -210,5 +212,59 @@ public class GlobalExceptionHandler {
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
+
+    @ExceptionHandler(PlaylistAlreadyExistsException.class)
+    public ProblemDetail handlePlaylistAlreadyExists(PlaylistAlreadyExistsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT, ex.getMessage()
+        );
+        problem.setTitle("Playlist ya existe");
+        problem.setType(URI.create("errors/playlist-already-exists"));
+        problem.setProperty("timestamp", Instant.now().toString());
+        return problem;
+    }
+
+    @ExceptionHandler(PlaylistNotFoundException.class)
+    public ProblemDetail handlePlaylistNotFound(PlaylistNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND, ex.getMessage()
+        );
+        problem.setTitle("Playlist no encontrada");
+        problem.setType(URI.create("errors/playlist-not-found"));
+        problem.setProperty("timestamp", Instant.now().toString());
+        return problem;
+    }
+
+    @ExceptionHandler(SongNotInPlaylistException.class)
+    public ProblemDetail handleSongNotInPlaylist(
+            SongNotInPlaylistException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("La canción no pertenece a la Playlist");
+        problem.setType(URI.create("erros/song-not-in-playlist"));
+        problem.setProperty("timestamp", Instant.now().toString());
+        return problem;
+    }
+
+    @ExceptionHandler(PlaylistAccessDeniedException.class)
+    public ProblemDetail handlePlaylistAccessDenied(
+            PlaylistAccessDeniedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problem.setTitle("No autorizado para operar sobre la playlist");
+        problem.setType(URI.create("https://yourapi.com/problems/playlist-access-denied"));
+        problem.setProperty("timestamp", Instant.now().toString());
+        return problem;
+    }
+
+    @ExceptionHandler(PlaylistNotPublicException.class)
+    public ProblemDetail handlePlaylistNotPublic(
+            PlaylistNotPublicException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problem.setTitle("La playlist es privada");
+        problem.setType(URI.create("https://yourapi.com/problems/playlist-not-public"));
+        problem.setProperty("timestamp", Instant.now().toString());
+        return problem;
+    }
+
+
 
 }

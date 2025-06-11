@@ -3,16 +3,13 @@ package com.dylabs.zuko.mapper;
 import com.dylabs.zuko.dto.request.PlaylistRequest;
 import com.dylabs.zuko.dto.response.PlaylistResponse;
 import com.dylabs.zuko.dto.response.SongResponse;
+import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
 import com.dylabs.zuko.model.Playlist;
 import com.dylabs.zuko.model.Song;
-import com.dylabs.zuko.model.User;
 import com.dylabs.zuko.repository.SongRepository;
 import com.dylabs.zuko.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -20,10 +17,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PlaylistMapper {
 
-    private final SongRepository songRepository; // Inyección de repositorio de canciones
-    private final UserRepository userRepository; // Inyección de repositorio de usuarios
+    private final SongRepository songRepository;
+    private final UserRepository userRepository;
 
-    // **Convertir Playlist a PlaylistResponse**
     public PlaylistResponse toResponse(Playlist playlist) {
         PlaylistResponse playlistResponse = new PlaylistResponse(
                 playlist.getPlaylistId(),
@@ -32,70 +28,39 @@ public class PlaylistMapper {
                 playlist.isPublic(),
                 playlist.getCreatedAt(),
                 playlist.getSongs().stream()
-                        .map(this::toSongResponse) // Mapear canciones a SongResponse
-                        .collect(Collectors.toSet()),
-                playlist.getUsers().stream()
-                        .map(User::getId) // Extraer el ID de los usuarios
+                        .map(this::toSongResponse)
                         .collect(Collectors.toSet())
         );
         return playlistResponse;
     }
 
-    // **Convertir PlaylistRequest a Playlist**
     public Playlist toEntity(PlaylistRequest request) {
         Playlist playlist = new Playlist();
         playlist.setName(request.name());
         playlist.setDescription(request.description());
         playlist.setPublic(request.isPublic());
-        playlist.setSongs(idsToSongs(request.songIds())); // Maneja bien Set<Long>
-        playlist.setUsers(idsToUsers(request.userIds())); // Maneja bien Set<Long>
         return playlist;
     }
 
-    // **Mapear Song a SongResponse**
-    private SongResponse toSongResponse(Song song) {
+    public SongResponse toSongResponse(Song song) {
         return new SongResponse(
                 song.getId(),
                 song.getTitle(),
                 song.isPublicSong(),
                 song.getReleaseDate(),
-                null, // Mensaje adicional, puede dejarse en blanco o configurarse
+                null,
                 song.getArtist().getId(),
                 song.getArtist().getName()
         );
     }
 
-    // **Convertir un Set de IDs de canciones a entidades Song**
     public Set<Song> idsToSongs(Set<Long> songIds) {
         if (songIds == null || songIds.isEmpty()) {
             return Set.of();
         }
         return songIds.stream()
                 .map(songId -> songRepository.findById(songId)
-                        .orElseThrow(() -> new IllegalArgumentException("Canción no encontrada con ID: " + songId)))
+                        .orElseThrow(() -> new SongNotFoundException("Canción no encontrada con ID: " + songId)))
                 .collect(Collectors.toSet());
-    }
-
-    // **Convertir un Set de IDs de usuarios a entidades User**
-    public Set<User> idsToUsers(Set<Long> userIds) {
-        if (userIds == null || userIds.isEmpty()) {
-            return Set.of(); // Devuelve un Set vacío si no hay IDs proporcionados
-        }
-
-        // Realiza una única consulta masiva para obtener todos los usuarios con los IDs especificados
-        var users = userRepository.findAllById(userIds);
-
-        // Verifica si hay usuarios faltantes comparando el total de IDs proporcionados con los encontrados
-        if (users.size() != userIds.size()) {
-            var foundIds = users.stream()
-                    .map(User::getId)
-                    .collect(Collectors.toSet());
-            var missingIds = userIds.stream()
-                    .filter(id -> !foundIds.contains(id))
-                    .collect(Collectors.toSet());
-            throw new IllegalArgumentException("Usuarios no encontrados con los siguientes IDs: " + missingIds);
-        }
-
-        return new HashSet<>(users); // Retorna los usuarios encontrados como un Set
     }
 }

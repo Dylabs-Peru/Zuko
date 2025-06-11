@@ -2,7 +2,6 @@ package com.dylabs.zuko.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -29,15 +28,11 @@ public class Playlist {
             joinColumns = @JoinColumn(name = "playlist_id"),
             inverseJoinColumns = @JoinColumn(name = "song_id")
     )
-    private Set<Song> songs = new HashSet<>(); // Inicialización directa
+    private Set<Song> songs = new HashSet<>();
 
-    @ManyToMany
-    @JoinTable(
-            name = "user_playlist",
-            joinColumns = @JoinColumn(name = "playlist_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    private Set<User> users = new HashSet<>(); // Inicialización directa
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
 
     public Long getPlaylistId() {
@@ -88,11 +83,11 @@ public class Playlist {
         this.songs = songs;
     }
 
-    public Set<User> getUsers() {
-        return users;
+    public User getUser() {
+        return user;
     }
 
-    public void setUsers(Set<User> users) {
-        this.users = users;
+    public void setUser(User user) {
+        this.user = user;
     }
 }

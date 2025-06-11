@@ -9,6 +9,5 @@ public record PlaylistResponse(
         String description,
         boolean isPublic,
         LocalDate createdAt,
-        Set<SongResponse> songs, // Representar canciones con su información completa
-        Set<Long> userIds // IDs de usuarios relacionados
+        Set<SongResponse> songs
 ) {}
