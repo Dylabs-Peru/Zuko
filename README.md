@@ -33,7 +33,7 @@ http://localhost:8080/api/v1/
 
 Consulta la documentación de la API o Swagger para rutas y uso.
 
-(USA POSTMAN NOMAS FRACAZOE)
+(DOCUMENTACIÓN DE LA API PENDIENTE/ USAR POSTMAN PARA PROBAR LOS ENDPOINTS EQUIPO DYLABS)
 ## 🧑‍💻 Uso en desarrollo
 
 Para modificar el código y probar en caliente:
