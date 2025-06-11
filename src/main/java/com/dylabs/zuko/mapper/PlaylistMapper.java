@@ -42,7 +42,7 @@ public class PlaylistMapper {
         return playlist;
     }
 
-    private SongResponse toSongResponse(Song song) {
+    public SongResponse toSongResponse(Song song) {
         return new SongResponse(
                 song.getId(),
                 song.getTitle(),

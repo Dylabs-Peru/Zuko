@@ -5,9 +5,7 @@ import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumPermissionException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumValidationException;
 import com.dylabs.zuko.exception.genreExeptions.GenreInUseException;
-import com.dylabs.zuko.exception.playlistExceptions.PlaylistAlreadyExistsException;
-import com.dylabs.zuko.exception.playlistExceptions.PlaylistNotFoundException;
-import com.dylabs.zuko.exception.playlistExceptions.SongNotInPlaylistException;
+import com.dylabs.zuko.exception.playlistExceptions.*;
 import com.dylabs.zuko.exception.roleExeptions.*;
 import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
 import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
@@ -243,6 +241,26 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("La canción no pertenece a la Playlist");
         problem.setType(URI.create("erros/song-not-in-playlist"));
+        problem.setProperty("timestamp", Instant.now().toString());
+        return problem;
+    }
+
+    @ExceptionHandler(PlaylistAccessDeniedException.class)
+    public ProblemDetail handlePlaylistAccessDenied(
+            PlaylistAccessDeniedException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problem.setTitle("No autorizado para operar sobre la playlist");
+        problem.setType(URI.create("https://yourapi.com/problems/playlist-access-denied"));
+        problem.setProperty("timestamp", Instant.now().toString());
+        return problem;
+    }
+
+    @ExceptionHandler(PlaylistNotPublicException.class)
+    public ProblemDetail handlePlaylistNotPublic(
+            PlaylistNotPublicException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problem.setTitle("La playlist es privada");
+        problem.setType(URI.create("https://yourapi.com/problems/playlist-not-public"));
         problem.setProperty("timestamp", Instant.now().toString());
         return problem;
     }

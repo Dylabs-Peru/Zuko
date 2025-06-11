@@ -17,4 +17,5 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
     List<Playlist> findAllByIsPublicTrue();
 
     List<Playlist> findAllByUser_id(Long userId);
+
 }

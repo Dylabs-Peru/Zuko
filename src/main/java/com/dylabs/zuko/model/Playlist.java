@@ -83,7 +83,7 @@ public class Playlist {
         this.songs = songs;
     }
 
-    public User getUsers() {
+    public User getUser() {
         return user;
     }
 
