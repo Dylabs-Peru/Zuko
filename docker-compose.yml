@@ -8,7 +8,7 @@ services:
     depends_on:
       - db
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/taskmanagement_db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/zuko_db
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=adminadmin
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
@@ -19,7 +19,7 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: taskmanagement_db
+      POSTGRES_DB: zuko_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: adminadmin
     volumes:
