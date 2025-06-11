@@ -1,11 +1,29 @@
-version: '3.9'
-
+version: '3.8'
 services:
-  postgres:
-    image: postgres
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: adminadmin
-      POSTGRES_DB: zuko_db
+  app:
+    build: .
+    container_name: springboot-app
     ports:
-      - 5432:5432
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/taskmanagement_db
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=adminadmin
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
+  db:
+    image: postgres:15
+    container_name: postgres-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: taskmanagement_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: adminadmin
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
