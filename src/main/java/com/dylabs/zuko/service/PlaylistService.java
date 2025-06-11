@@ -88,17 +88,6 @@ public class PlaylistService {
         if (!isOwner && !isPublic) {
             throw new PlaylistNotPublicException("No tienes acceso a esta playlist privada");
         }
-//        return playlist.getSongs().stream()
-//                .map(song -> new SongResponse(
-//                        song.getId(),
-//                        song.getTitle(),
-//                        song.isPublicSong(),
-//                        song.getReleaseDate(),
-//                        null,
-//                        song.getArtist().getId(),
-//                        song.getArtist().getName()
-//                ))
-//                .collect(Collectors.toList());
             return playlist.getSongs().stream()
                     .map(playlistMapper::toSongResponse)
                     .collect(Collectors.toList());
