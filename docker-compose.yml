@@ -1,0 +1,11 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: adminadmin
+      POSTGRES_DB: zuko_db
+    ports:
+      - 5432:5432
