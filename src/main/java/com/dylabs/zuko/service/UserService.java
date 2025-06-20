@@ -133,6 +133,12 @@ public class UserService {
         return userMapper.toResponse(user);
     }
 
+    public UserResponse getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario con username '" + username + "' no encontrado"));
+        return userMapper.toResponse(user);
+    }
+
 //    public UserResponse updateUser(Long id, UpdateUserRequest updateRequest) {
 //
 //
