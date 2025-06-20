@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +23,7 @@ public class AlbumController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<Object> createAlbum(@RequestBody @Valid AlbumRequest request, Authentication authentication) {
-        // Recupera el ID del usuario autenticado desde el token
+
         String userIdFromToken = authentication.getName();
         AlbumResponse response = albumService.createAlbum(request, userIdFromToken);
         return ResponseEntity.status(HttpStatus.CREATED).body(
@@ -38,7 +37,7 @@ public class AlbumController {
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<Object> getAlbumById(@PathVariable Long id, Authentication authentication) {
-        // Recupera el ID del usuario autenticado desde el token (en caso de futuras validaciones)
+
         String userIdFromToken = authentication.getName();
         AlbumResponse response = albumService.getAlbumById(id);
         return ResponseEntity.ok(
@@ -52,7 +51,7 @@ public class AlbumController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<Object> updateAlbum(@PathVariable Long id, @RequestBody @Valid AlbumRequest request, Authentication authentication) {
-        // Recupera el ID del usuario autenticado desde el token
+
         String userIdFromToken = authentication.getName();
         AlbumResponse response = albumService.updateAlbum(id, request, userIdFromToken);
         return ResponseEntity.ok(
@@ -66,7 +65,7 @@ public class AlbumController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<Object> deleteAlbum(@PathVariable Long id, Authentication authentication) {
-        // Recupera el ID del usuario autenticado desde el token
+
         String userIdFromToken = authentication.getName();
         albumService.deleteAlbum(id, userIdFromToken);
         return ResponseEntity.ok(
