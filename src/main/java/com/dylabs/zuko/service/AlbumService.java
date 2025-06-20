@@ -18,6 +18,7 @@ import com.dylabs.zuko.model.User;
 import com.dylabs.zuko.repository.AlbumRepository;
 import com.dylabs.zuko.repository.ArtistRepository;
 import com.dylabs.zuko.repository.GenreRepository;
+import com.dylabs.zuko.repository.SongRepository;
 import com.dylabs.zuko.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -35,6 +36,7 @@ public class AlbumService {
     private final ArtistRepository artistRepository;
     private final GenreRepository genreRepository;
     private final AlbumMapper albumMapper;
+    private final SongRepository songRepository;
     private final SongMapper songMapper;
     private final UserRepository userRepository;
 
@@ -65,7 +67,23 @@ public class AlbumService {
             throw new AlbumValidationException("El álbum debe contener al menos dos canciones.");
         }
 
+        for (var songReq : request.songs()) {
+            if (!songRepository.existsByTitleIgnoreCaseAndArtistId(songReq.title(), artist.getId())) {
+                throw new AlbumValidationException("La canción '" + songReq.title() + "' no existe para este artista. No se puede crear el álbum.");
+            }
+        }
+
+        List<Song> songs = songRepository.findAll().stream()
+                .filter(s -> request.songs().stream()
+                        .anyMatch(req -> s.getTitle().equalsIgnoreCase(req.title()) && s.getArtist().getId().equals(artist.getId())))
+                .collect(Collectors.toList());
+
+        if (songs.size() != request.songs().size()) {
+            throw new AlbumValidationException("Alguna canción no pertenece al artista o no existe.");
+        }
+
         Album album = albumMapper.toAlbumEntity(request, artist, genre);
+        album.setSongs(songs);
         album.setReleaseDate(LocalDate.now());
         album.setCreationDate(LocalDate.now());
         albumRepository.save(album);
@@ -112,7 +130,24 @@ public class AlbumService {
             throw new AlbumValidationException("El álbum debe contener al menos dos canciones.");
         }
 
+        for (var songReq : request.songs()) {
+            if (!songRepository.existsByTitleIgnoreCaseAndArtistId(songReq.title(), artist.getId())) {
+                throw new AlbumValidationException("La canción '" + songReq.title() + "' no existe para este artista. No se puede actualizar el álbum.");
+            }
+        }
+
+        List<Song> songs = songRepository.findAll().stream()
+                .filter(s -> request.songs().stream()
+                        .anyMatch(req -> s.getTitle().equalsIgnoreCase(req.title()) && s.getArtist().getId().equals(artist.getId())))
+                .collect(Collectors.toList());
+
+        if (songs.size() != request.songs().size()) {
+            throw new AlbumValidationException("Alguna canción no pertenece al artista o no existe.");
+        }
+
         albumMapper.updateAlbumFromRequest(album, request, genre, artist);
+        album.getSongs().clear();
+        album.getSongs().addAll(songs);
         albumRepository.save(album);
 
         return albumMapper.toResponse(album);
