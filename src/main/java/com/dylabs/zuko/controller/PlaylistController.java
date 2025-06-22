@@ -25,16 +25,16 @@ public class PlaylistController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<Object> createPlaylist(@RequestBody @Valid PlaylistRequest request, Authentication authentication) {
-        String id = authentication.getName();
-        PlaylistResponse response = playlistService.createPlaylist(id, request);
+        String userId = authentication.getName();
+        PlaylistResponse response = playlistService.createPlaylist(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 new ApiResponse<>("Playlist creada correctamente", response));
     }
 
     @GetMapping("/{playlistId}")
     public ResponseEntity<Object> getPlaylistById(@PathVariable Long playlistId, Authentication authentication) {
-        String username = authentication.getName();
-        PlaylistResponse response = playlistService.getPlaylistById(username, playlistId);
+        String userId = authentication.getName();
+        PlaylistResponse response = playlistService.getPlaylistById(userId, playlistId);
         return ResponseEntity.ok(
                 new ApiResponse<>("Playlist obtenida correctamente", response));
     }
@@ -42,16 +42,16 @@ public class PlaylistController {
     @DeleteMapping("/{playlistId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<Object> deletePlaylist(@PathVariable Long playlistId, Authentication authentication) {
-        String username = authentication.getName();
-        playlistService.deletePlaylist(username, playlistId);
+        String userId = authentication.getName();
+        playlistService.deletePlaylist(userId, playlistId);
         return ResponseEntity
                 .ok(new ApiResponse<>("Playlist eliminada correctamente", null));
     }
 
     @GetMapping("/{playlistId}/songs")
     public ResponseEntity<Object> listSongsInPlaylist(@PathVariable Long playlistId, Authentication authentication) {
-        String username = authentication.getName();
-        List<SongResponse> songs = playlistService.listSongsInPlaylist(username, playlistId);
+        String userId = authentication.getName();
+        List<SongResponse> songs = playlistService.listSongsInPlaylist(userId, playlistId);
         return ResponseEntity.ok(
                 new ApiResponse<>("Lista de songs obtenida correctamente", songs)
         );
@@ -62,8 +62,8 @@ public class PlaylistController {
             @PathVariable Long playlistId,
             @RequestBody @Valid AddSongtoPlaylistRequest request,
             Authentication authentication) {
-        String username = authentication.getName();
-        playlistService.addSongToPlaylist(username, playlistId, request.songId());
+        String userId = authentication.getName();
+        playlistService.addSongToPlaylist(userId, playlistId, request.songId());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>("Canción añadida correctamente", null));
     }
@@ -74,8 +74,8 @@ public class PlaylistController {
             @PathVariable Long playlistId,
             @PathVariable Long songId,
             Authentication authentication) {
-        String username = authentication.getName();
-        playlistService.removeSongFromPlaylist(username, playlistId, songId);
+        String userId = authentication.getName();
+        playlistService.removeSongFromPlaylist(userId, playlistId, songId);
         return ResponseEntity.ok(
                 new ApiResponse<>("Canción eliminada correctamente", null));
     }
