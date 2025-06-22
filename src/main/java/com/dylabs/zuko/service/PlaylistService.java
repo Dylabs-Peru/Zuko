@@ -52,8 +52,9 @@ public class PlaylistService {
 
         boolean isOwner = playlist.getUser().getId().equals(user.getId());
         boolean isPublic = playlist.isPublic();
+        boolean isAdmin = user.getUserRoleName().equalsIgnoreCase("ADMIN");
 
-        if (!isOwner && !isPublic) {
+        if (!isOwner && !isPublic && !isAdmin) {
             throw new PlaylistNotPublicException("No tienes acceso a esta playlist privada");
         }
         return playlistMapper.toResponse(playlist);
@@ -85,8 +86,9 @@ public class PlaylistService {
 
         boolean isOwner = playlist.getUser().getId().equals(user.getId());
         boolean isPublic = playlist.isPublic();
-        if (!isOwner && !isPublic) {
-            throw new PlaylistNotPublicException("No tienes acceso a esta playlist privada");
+        boolean isAdmin = user.getUserRoleName().equalsIgnoreCase("ADMIN");
+        if (!isOwner && !isPublic && !isAdmin) {
+            throw new PlaylistNotPublicException("No tienes acceso a esta playlist privada " + user.getUserRoleName());
         }
             return playlist.getSongs().stream()
                     .map(playlistMapper::toSongResponse)
