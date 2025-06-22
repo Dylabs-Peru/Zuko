@@ -92,10 +92,42 @@ public class AlbumService {
     }
 
 
+
+
     public AlbumResponse getAlbumById(Long id) {
         Album album = albumRepository.findById(id)
                 .orElseThrow(() -> new AlbumNotFoundException("Álbum no disponible."));
         return albumMapper.toResponse(album);
+    }
+
+    public List<AlbumResponse> getAlbumsByTitle(String title) {
+        List<Album> albums = albumRepository.findAllByTitleContainingIgnoreCase(title);
+        if (albums.isEmpty()) {
+            throw new AlbumNotFoundException("No se encontraron álbumes con el título especificado.");
+        }
+        return albums.stream().map(albumMapper::toResponse).collect(Collectors.toList());
+    }
+
+    public List<AlbumResponse> getAlbumsByTitleAndUser(String title, String userIdFromToken) {
+        User user = userRepository.findById(Long.parseLong(userIdFromToken))
+                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado"));
+
+        Artist artist = artistRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ArtistNotFoundException("No tienes un perfil de artista."));
+
+        List<Album> albums = albumRepository.findAllByTitleContainingIgnoreCaseAndArtistId(title, artist.getId());
+        if (albums.isEmpty()) {
+            throw new AlbumNotFoundException("No se encontraron álbumes con el título especificado para este artista.");
+        }
+        return albums.stream().map(albumMapper::toResponse).collect(Collectors.toList());
+    }
+
+    public List<AlbumResponse> getAllAlbums() {
+        List<Album> albums = albumRepository.findAll();
+        if (albums.isEmpty()) {
+            throw new AlbumNotFoundException("No se encontraron álbumes.");
+        }
+        return albums.stream().map(albumMapper::toResponse).collect(Collectors.toList());
     }
 
 
@@ -152,7 +184,6 @@ public class AlbumService {
 
         return albumMapper.toResponse(album);
     }
-
 
 
     public void deleteAlbum(Long id, String userIdFromToken) {
