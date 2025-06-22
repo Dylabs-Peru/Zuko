@@ -80,6 +80,29 @@ public class PlaylistController {
                 new ApiResponse<>("Canción eliminada correctamente", null));
     }
 
+    @GetMapping("/public/by-name/{playlistName}")
+    public ResponseEntity<Object> getPublicPlaylistByName(@PathVariable String playlistName) {
+        PlaylistResponse response = playlistService.getPublicPlaylistByName(playlistName);
+        return ResponseEntity.ok(new ApiResponse<>("Playlist obtenida correctamente", response));
+    }
+
+    @GetMapping("/by-name/{playlistName}")
+    public ResponseEntity<Object> getPlaylistByName(
+            @PathVariable String playlistName, Authentication authentication) {
+        String userId = authentication.getName();
+        PlaylistResponse response = playlistService.getPlaylistByName(userId, playlistName);
+        return ResponseEntity.ok(new ApiResponse<>("Playlist obtenida correctamente", response));
+    }
+
+    @GetMapping("/mine")
+    public ResponseEntity<Object> getMyPlaylists(Authentication authentication) {
+        String userId = authentication.getName();
+        List<PlaylistResponse> response = playlistService.getAllPlaylistsByUser(userId);
+        return ResponseEntity.ok(new ApiResponse<>("Playlists obtenidas correctamente", response));
+    }
+
+
+
 
 
 }

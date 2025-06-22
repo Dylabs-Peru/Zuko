@@ -138,4 +138,39 @@ public class PlaylistService {
         playlistRepository.save(playlist);
     }
 
+    public PlaylistResponse getPlaylistByName(String userId, String playlistName) {
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado con id: " + userId));
+        Playlist playlist = playlistRepository.findByNameIgnoreCaseAndUser_id(playlistName, user.getId())
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con nombre: " + playlistName));
+        boolean isOwner = playlist.getUser().getId().equals(user.getId());
+        boolean isAdmin = user.getUserRoleName().equalsIgnoreCase("ADMIN");
+        boolean isPublic = playlist.isPublic();
+        if (!isOwner && !isAdmin && !isPublic) {
+            throw new PlaylistNotPublicException("No tienes acceso a esta playlist privada");
+        }
+        return playlistMapper.toResponse(playlist);
+    }
+
+    public List<PlaylistResponse> getAllPlaylistsByUser(String userId) {
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado con id: " + userId));
+        return playlistRepository.findAllByUser_Id(user.getId())
+                .stream().map(playlistMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public PlaylistResponse getPublicPlaylistByName(String playlistName) {
+        Playlist playlist = playlistRepository.findByNameIgnoreCase(playlistName)
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con nombre: " + playlistName));
+        if (!playlist.isPublic()) {
+            throw new PlaylistNotPublicException("La playlist es privada");
+        }
+        return playlistMapper.toResponse(playlist);
+    }
+
+
+
+
+
 }
