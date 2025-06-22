@@ -29,7 +29,8 @@ public class PlaylistMapper {
                 playlist.getCreatedAt(),
                 playlist.getSongs().stream()
                         .map(this::toSongResponse)
-                        .collect(Collectors.toSet())
+                        .collect(Collectors.toSet()),
+                playlist.getUrl_image()
         );
         return playlistResponse;
     }
@@ -39,6 +40,7 @@ public class PlaylistMapper {
         playlist.setName(request.name());
         playlist.setDescription(request.description());
         playlist.setPublic(request.isPublic());
+        playlist.setUrl_image(request.url_image());
         return playlist;
     }
 

@@ -9,5 +9,6 @@ public record PlaylistResponse(
         String description,
         boolean isPublic,
         LocalDate createdAt,
-        Set<SongResponse> songs
+        Set<SongResponse> songs,
+        String url_image
 ) {}
