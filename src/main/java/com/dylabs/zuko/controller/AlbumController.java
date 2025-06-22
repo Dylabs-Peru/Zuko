@@ -1,5 +1,6 @@
 package com.dylabs.zuko.controller;
 
+import com.dylabs.zuko.dto.ApiResponse;
 import com.dylabs.zuko.dto.request.AlbumRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
 import com.dylabs.zuko.service.AlbumService;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -47,6 +49,38 @@ public class AlbumController {
                 )
         );
     }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public ResponseEntity<Object> getAlbumsByTitle(@RequestParam String title) {
+        List<AlbumResponse> response = albumService.getAlbumsByTitle(title);
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Álbumes obtenidos correctamente",
+                        "data", response
+                )
+        );
+    }
+
+    @GetMapping("/search/artist")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public ResponseEntity<Object> getAlbumsByTitleAndUser(@RequestParam String title, Authentication authentication) {
+        String userIdFromToken = authentication.getName();
+        List<AlbumResponse> response = albumService.getAlbumsByTitleAndUser(title, userIdFromToken);
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Álbumes obtenidos correctamente para el artista",
+                        "data", response
+                )
+        );
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<AlbumResponse>>> getAllAlbums() {
+        List<AlbumResponse> response = albumService.getAllAlbums();
+        return ResponseEntity.ok(new ApiResponse<>("Álbumes obtenidos correctamente", response));
+    }
+
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")

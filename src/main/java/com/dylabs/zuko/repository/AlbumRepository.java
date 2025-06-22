@@ -4,6 +4,8 @@ import com.dylabs.zuko.model.Album;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface AlbumRepository extends JpaRepository<Album, Long> {
     boolean existsByTitleIgnoreCaseAndArtistId(String title, Long artistId);
@@ -11,4 +13,8 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
     boolean existsByTitleIgnoreCaseAndArtistIdAndIdNot(String title, Long artistId, Long id);
 
     boolean existsByGenreId(Long genreId);
+
+    List<Album> findAllByTitleContainingIgnoreCase(String title);
+    List<Album> findAllByTitleContainingIgnoreCaseAndArtistId(String title, Long artistId);
+    List<Album> findAllByOrderByTitleAsc();
 }

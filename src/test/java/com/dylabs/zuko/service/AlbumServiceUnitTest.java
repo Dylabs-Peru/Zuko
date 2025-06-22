@@ -4,6 +4,7 @@ import com.dylabs.zuko.dto.request.AlbumRequest;
 import com.dylabs.zuko.dto.request.SongRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
 import com.dylabs.zuko.exception.albumExceptions.*;
+import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import com.dylabs.zuko.mapper.AlbumMapper;
 import com.dylabs.zuko.model.Album;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,14 +32,21 @@ import static org.mockito.Mockito.*;
 
 class AlbumServiceUnitTest {
 
-    @Mock private AlbumRepository albumRepository;
-    @Mock private AlbumMapper albumMapper;
-    @Mock private UserRepository userRepository;
-    @Mock private ArtistRepository artistRepository;
-    @Mock private GenreRepository genreRepository;
-    @Mock private SongRepository songRepository;
+    @Mock
+    private AlbumRepository albumRepository;
+    @Mock
+    private AlbumMapper albumMapper;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private ArtistRepository artistRepository;
+    @Mock
+    private GenreRepository genreRepository;
+    @Mock
+    private SongRepository songRepository;
 
-    @InjectMocks private AlbumService albumService;
+    @InjectMocks
+    private AlbumService albumService;
 
     private Artist artist;
     private Genre genre;
@@ -284,6 +293,99 @@ class AlbumServiceUnitTest {
                 () -> albumService.getAlbumById(999L));
     }
 
+    @Test
+    @DisplayName("CP03 - HU11: Obtener álbumes por título del artista")
+    void getAlbumsByTitleAndUser_whenAlbumsExist_returnsFilteredAlbums() {
+        // Arrange
+        String title = "Album";
+        when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
+        when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
+        when(albumRepository.findAllByTitleContainingIgnoreCaseAndArtistId(title, artist.getId())).thenReturn(List.of(album));
+        when(albumMapper.toResponse(album)).thenReturn(mock(AlbumResponse.class));
+
+        List<AlbumResponse> result = albumService.getAlbumsByTitleAndUser(title, ownerUser.getId().toString());
+
+        assertEquals(1, result.size());
+        verify(albumRepository).findAllByTitleContainingIgnoreCaseAndArtistId(title, artist.getId());
+    }
+
+    @Test
+    @DisplayName("CP04 - HU11: Obtencion fallida de album del artista por título inexistente")
+    void getAlbumsByTitleAndUser_whenNoAlbumsExist_throwsAlbumNotFoundException() {
+
+        String title = "Titulo";
+        when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
+        when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
+        when(albumRepository.findAllByTitleContainingIgnoreCaseAndArtistId(title, artist.getId())).thenReturn(Collections.emptyList());
+
+        AlbumNotFoundException ex = assertThrows(AlbumNotFoundException.class,
+                () -> albumService.getAlbumsByTitleAndUser(title, ownerUser.getId().toString()));
+        assertEquals("No se encontraron álbumes con el título especificado para este artista.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("CP05 - HU11: Obtencion fallida del album por usuario no autorizado")
+    void getAlbumsByTitleAndUser_whenUserHasNoArtistProfile_throwsArtistNotFoundException() {
+        // Arrange
+        when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
+        when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.empty());
+
+        // Act & Assert
+        ArtistNotFoundException ex = assertThrows(ArtistNotFoundException.class,
+                () -> albumService.getAlbumsByTitleAndUser("Album", ownerUser.getId().toString()));
+        assertEquals("No tienes un perfil de artista.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("CP06 - HU11: Obtener álbum por título existente")
+    void getAlbumsByTitle_whenAlbumsExist_returnsFilteredAlbums() {
+
+        String title = "Álbum";
+        when(albumRepository.findAllByTitleContainingIgnoreCase(title)).thenReturn(List.of(album));
+        when(albumMapper.toResponse(album)).thenReturn(mock(AlbumResponse.class));
+
+        List<AlbumResponse> result = albumService.getAlbumsByTitle(title);
+
+        assertEquals(1, result.size());
+        verify(albumRepository).findAllByTitleContainingIgnoreCase(title);
+    }
+
+    @Test
+    @DisplayName("CP07 - HU11: Obtencion fallida del album por titulo inexistente")
+    void getAlbumsByTitle_whenNoAlbumsExist_throwsAlbumNotFoundException() {
+
+        String title = "Título no existente";
+        when(albumRepository.findAllByTitleContainingIgnoreCase(title)).thenReturn(Collections.emptyList());
+
+        AlbumNotFoundException ex = assertThrows(AlbumNotFoundException.class,
+                () -> albumService.getAlbumsByTitle(title));
+        assertEquals("No se encontraron álbumes con el título especificado.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("CP08 - HU11: Obtener listar de albumes existentes")
+    void getAllAlbums_whenAlbumsExist_returnsAlbumList() {
+
+        List<Album> albums = List.of(album); // Mocks de álbumes
+        when(albumRepository.findAll()).thenReturn(albums);
+        when(albumMapper.toResponse(album)).thenReturn(mock(AlbumResponse.class));
+
+        List<AlbumResponse> result = albumService.getAllAlbums();
+
+        assertEquals(1, result.size());
+        verify(albumRepository).findAll();
+    }
+
+    @Test
+    @DisplayName("CP09 - HU11: Obtencion fallida de lista por albumes inexistentes")
+    void getAllAlbums_whenNoAlbumsExist_throwsAlbumNotFoundException() {
+
+        when(albumRepository.findAll()).thenReturn(Collections.emptyList());
+
+        AlbumNotFoundException ex = assertThrows(AlbumNotFoundException.class,
+                () -> albumService.getAllAlbums());
+        assertEquals("No se encontraron álbumes.", ex.getMessage());
+    }
 
 
 
