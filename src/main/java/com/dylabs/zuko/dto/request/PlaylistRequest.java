@@ -9,5 +9,6 @@ public record PlaylistRequest(
         @Size(min = 3, message = "El nombre debe tener al menos 3 caracteres")
         String name,
         String description,
-        boolean isPublic
+        boolean isPublic,
+        String url_image
 ) {}

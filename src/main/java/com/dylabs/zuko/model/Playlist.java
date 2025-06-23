@@ -34,6 +34,10 @@ public class Playlist {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = true)
+    private String url_image;
+
+
 
     public Long getPlaylistId() {
         return playlistId;
@@ -89,5 +93,13 @@ public class Playlist {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public String getUrl_image() {
+        return url_image;
+    }
+
+    public void setUrl_image(String url_image) {
+        this.url_image = url_image;
     }
 }

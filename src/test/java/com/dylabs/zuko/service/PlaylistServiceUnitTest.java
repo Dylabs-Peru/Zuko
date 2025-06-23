@@ -41,11 +41,11 @@ class PlaylistServiceUnitTest {
     @Test
     void createPlaylist_Success() {
         String userId = "1";
-        PlaylistRequest request = new PlaylistRequest("Test", "desc", true);
+        PlaylistRequest request = new PlaylistRequest("Test", "desc", true, "si");
         User user = new User(); user.setId(1L);
         Playlist playlist = new Playlist(); playlist.setUser(user);
         Playlist saved = new Playlist(); saved.setUser(user);
-        PlaylistResponse response = new PlaylistResponse(1L, "Test", "desc", true, null, Set.of());
+        PlaylistResponse response = new PlaylistResponse(1L, "Test", "desc", true, null, Set.of(), "si");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(playlistRepository.existsByNameIgnoreCaseAndUser_id("Test", 1L)).thenReturn(false);
@@ -60,7 +60,7 @@ class PlaylistServiceUnitTest {
     @Test
     void createPlaylist_UserNotFound() {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThrows(UserNotFoundExeption.class, () -> playlistService.createPlaylist("1", new PlaylistRequest("Test", "desc", true)));
+        assertThrows(UserNotFoundExeption.class, () -> playlistService.createPlaylist("1", new PlaylistRequest("Test", "desc", true, "si")));
     }
 
     @Test
@@ -68,7 +68,7 @@ class PlaylistServiceUnitTest {
         User user = new User(); user.setId(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(playlistRepository.existsByNameIgnoreCaseAndUser_id("Test", 1L)).thenReturn(true);
-        assertThrows(PlaylistAlreadyExistsException.class, () -> playlistService.createPlaylist("1", new PlaylistRequest("Test", "desc", true)));
+        assertThrows(PlaylistAlreadyExistsException.class, () -> playlistService.createPlaylist("1", new PlaylistRequest("Test", "desc", true, "si")));
     }
 
     // 2. getPlaylistById
