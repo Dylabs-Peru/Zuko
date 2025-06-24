@@ -199,4 +199,11 @@ public class AlbumService {
         albumRepository.delete(album);
     }
 
+    public AlbumResponse getAlbumBySongId(Long songId) {
+        Album album = albumRepository.findAlbumBySongId(songId)
+                .orElseThrow(() -> new AlbumNotFoundException("No se encontró un álbum para esta canción"));
+        return albumMapper.toResponse(album);
+    }
+
+
 }

@@ -108,4 +108,17 @@ public class AlbumController {
                 )
         );
     }
+
+    @GetMapping("/from-song/{songId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
+    public ResponseEntity<Object> getAlbumBySongId(@PathVariable Long songId) {
+        AlbumResponse response = albumService.getAlbumBySongId(songId);
+        return ResponseEntity.ok(
+                Map.of(
+                        "message", "Álbum encontrado por ID de canción",
+                        "data", response
+                )
+        );
+    }
+
 }
