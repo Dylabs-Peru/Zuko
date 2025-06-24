@@ -197,6 +197,8 @@ public class PlaylistService {
             playlist.setUrl_image(updatePlaylistRequest.url_image());
         }
 
+        playlistRepository.save(playlist);
+
         return playlistMapper.toResponse(playlist);
 
 
