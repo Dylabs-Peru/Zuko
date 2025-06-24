@@ -44,17 +44,8 @@ public class AlbumService {
         User user = userRepository.findById(Long.parseLong(userIdFromToken))
                 .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado"));
 
-        Artist artist;
-        if ("ADMIN".equalsIgnoreCase(user.getUserRoleName())) {
-            artist = artistRepository.findById(request.artistId())
-                    .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + request.artistId()));
-        } else {
-            artist = artistRepository.findByUserId(user.getId())
-                    .orElseThrow(() -> new ArtistNotFoundException("No tienes un perfil de artista."));
-            if (!artist.getId().equals(request.artistId())) {
-                throw new AlbumPermissionException("No puedes crear un álbum para otro artista.");
-            }
-        }
+        Artist artist = artistRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ArtistNotFoundException("No tienes un perfil de artista."));
 
         Genre genre = genreRepository.findById(request.genreId())
                 .orElseThrow(() -> new GenreNotFoundException("El género no fue encontrado."));
@@ -69,13 +60,14 @@ public class AlbumService {
 
         for (var songReq : request.songs()) {
             if (!songRepository.existsByTitleIgnoreCaseAndArtistId(songReq.title(), artist.getId())) {
-                throw new AlbumValidationException("La canción '" + songReq.title() + "' no existe para este artista. No se puede crear el álbum.");
+                throw new AlbumValidationException("La canción '" + songReq.title() + "' no existe para este artista.");
             }
         }
 
         List<Song> songs = songRepository.findAll().stream()
-                .filter(s -> request.songs().stream()
-                        .anyMatch(req -> s.getTitle().equalsIgnoreCase(req.title()) && s.getArtist().getId().equals(artist.getId())))
+                .filter(song -> request.songs().stream()
+                        .anyMatch(req -> song.getTitle().equalsIgnoreCase(req.title()) &&
+                                song.getArtist().getId().equals(artist.getId())))
                 .collect(Collectors.toList());
 
         if (songs.size() != request.songs().size()) {
@@ -187,7 +179,7 @@ public class AlbumService {
 
 
     public void deleteAlbum(Long id, String userIdFromToken) {
-        // Buscar el álbum por ID
+
         Album album = albumRepository.findById(id)
                 .orElseThrow(() -> new AlbumNotFoundException("Álbum no disponible."));
 
