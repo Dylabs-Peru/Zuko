@@ -81,7 +81,7 @@ public class Album {
 
     public void setId(Long id) {
         this.id = id;
-    } // id
+    }
 
     public void setTitle(String title) {
         this.title = title;
