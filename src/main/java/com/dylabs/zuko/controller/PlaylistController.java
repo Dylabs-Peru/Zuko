@@ -2,6 +2,7 @@ package com.dylabs.zuko.controller;
 import com.dylabs.zuko.dto.ApiResponse;
 import com.dylabs.zuko.dto.request.AddSongtoPlaylistRequest;
 import com.dylabs.zuko.dto.request.PlaylistRequest;
+import com.dylabs.zuko.dto.request.UpdatePlaylistRequest;
 import com.dylabs.zuko.dto.response.PlaylistResponse;
 import com.dylabs.zuko.dto.response.SongResponse;
 import com.dylabs.zuko.service.PlaylistService;
@@ -100,6 +101,18 @@ public class PlaylistController {
         List<PlaylistResponse> response = playlistService.getAllPlaylistsByUser(userId);
         return ResponseEntity.ok(new ApiResponse<>("Playlists obtenidas correctamente", response));
     }
+
+    @PatchMapping("/{playlistId}")
+    public ResponseEntity<Object> updatePlaylist(
+            @PathVariable Long playlistId,
+            @RequestBody UpdatePlaylistRequest updatePlaylistRequest,
+            Authentication authentication) {
+        String userId = authentication.getName();
+        PlaylistResponse response = playlistService.editPlaylistById(playlistId, userId, updatePlaylistRequest);
+        return ResponseEntity.ok(new ApiResponse<>("Playlist editada correctamente", response));
+
+    }
+
 
 
 

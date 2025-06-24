@@ -1,6 +1,7 @@
 package com.dylabs.zuko.service;
 
 import com.dylabs.zuko.dto.request.PlaylistRequest;
+import com.dylabs.zuko.dto.request.UpdatePlaylistRequest;
 import com.dylabs.zuko.dto.response.PlaylistResponse;
 import com.dylabs.zuko.dto.response.SongResponse;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
@@ -167,6 +168,38 @@ public class PlaylistService {
             throw new PlaylistNotPublicException("La playlist es privada");
         }
         return playlistMapper.toResponse(playlist);
+    }
+
+    public PlaylistResponse editPlaylistById(Long playlistId, String userId, UpdatePlaylistRequest updatePlaylistRequest) {
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado con id: " + userId));
+
+        Playlist playlist = playlistRepository.findById(playlistId)
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId));
+
+        boolean isOwner = playlist.getUser().getId().equals(user.getId());
+        boolean isAdmin = user.getUserRoleName().equalsIgnoreCase("ADMIN");
+        if (!isOwner && !isAdmin) {
+            throw new PlaylistAccessDeniedException("No tienes permisos para modificar esta playlist.");
+        }
+
+        if (updatePlaylistRequest.name() !=null)
+        {
+            playlist.setName(updatePlaylistRequest.name());
+        }
+        if (updatePlaylistRequest.description() !=null){
+            playlist.setDescription(updatePlaylistRequest.description());
+        }
+
+        playlist.setPublic(updatePlaylistRequest.isPublic());
+
+        if (updatePlaylistRequest.url_image() !=null){
+            playlist.setUrl_image(updatePlaylistRequest.url_image());
+        }
+
+        return playlistMapper.toResponse(playlist);
+
+
     }
 
 
