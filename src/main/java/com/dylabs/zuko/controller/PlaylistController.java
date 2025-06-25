@@ -105,6 +105,7 @@ public class PlaylistController {
     @PatchMapping("/{playlistId}")
     public ResponseEntity<Object> updatePlaylist(
             @PathVariable Long playlistId,
+            @Valid
             @RequestBody UpdatePlaylistRequest updatePlaylistRequest,
             Authentication authentication) {
         String userId = authentication.getName();

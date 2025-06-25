@@ -193,9 +193,13 @@ public class PlaylistService {
 
         playlist.setPublic(updatePlaylistRequest.isPublic());
 
-        if (updatePlaylistRequest.url_image() !=null){
+        if (updatePlaylistRequest.url_image().isBlank()) {
+            playlist.setUrl_image(null);
+        } else {
             playlist.setUrl_image(updatePlaylistRequest.url_image());
         }
+
+        playlistRepository.save(playlist);
 
         return playlistMapper.toResponse(playlist);
 
