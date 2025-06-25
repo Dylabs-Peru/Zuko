@@ -161,14 +161,14 @@ public class PlaylistService {
                 .collect(Collectors.toList());
     }
 
-    public PlaylistResponse getPublicPlaylistByName(String playlistName) {
-        Playlist playlist = playlistRepository.findByNameIgnoreCase(playlistName)
-                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con nombre: " + playlistName));
-        if (!playlist.isPublic()) {
-            throw new PlaylistNotPublicException("La playlist es privada");
-        }
-        return playlistMapper.toResponse(playlist);
+    public List<PlaylistResponse> searchPublicPlaylistsByName(String name) {
+        List<Playlist> playlists = playlistRepository
+                .findByisPublicTrueAndNameContainingIgnoreCase(name);
+        return playlists.stream()
+                .map(playlistMapper::toResponse)
+                .toList();
     }
+
 
     public PlaylistResponse editPlaylistById(Long playlistId, String userId, UpdatePlaylistRequest updatePlaylistRequest) {
         User user = userRepository.findById(Long.parseLong(userId))

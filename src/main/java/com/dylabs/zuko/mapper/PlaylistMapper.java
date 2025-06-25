@@ -30,7 +30,8 @@ public class PlaylistMapper {
                 playlist.getSongs().stream()
                         .map(this::toSongResponse)
                         .collect(Collectors.toSet()),
-                playlist.getUrl_image()
+                playlist.getUrl_image(),
+                playlist.getUser().getId()
         );
         return playlistResponse;
     }
