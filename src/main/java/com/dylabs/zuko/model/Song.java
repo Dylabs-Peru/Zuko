@@ -16,16 +16,27 @@ public class Song {
     private boolean isPublicSong;
     private LocalDate releaseDate;
 
+    @Column(name = "youtube_url")
+    private String youtubeUrl;
     @ManyToOne
     @JoinColumn(name = "artist_id", nullable = false)
     private Artist artist;
 
     public Song() {}
 
-    public Song(String title, boolean isPublicSong) {
+    public Song(String title, boolean isPublicSong, String youtubeUrl) {
         this.title = title;
         this.isPublicSong = isPublicSong;
-        this.releaseDate = LocalDate.now(); //
+        this.releaseDate = LocalDate.now();
+        this.youtubeUrl = youtubeUrl;
+    }
+
+    public String getYoutubeUrl() {
+        return youtubeUrl;
+    }
+
+    public void setYoutubeUrl(String youtubeUrl) {
+        this.youtubeUrl = youtubeUrl;
     }
 
     public long getId() {

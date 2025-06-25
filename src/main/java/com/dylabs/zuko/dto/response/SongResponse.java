@@ -9,5 +9,6 @@ public record SongResponse(
         LocalDate releaseDate,
         String message,
         Long artistId,
-        String artistName
+        String artistName,
+        String youtubeUrl
 ) {}
