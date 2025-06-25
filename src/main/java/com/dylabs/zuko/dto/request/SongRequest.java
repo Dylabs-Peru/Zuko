@@ -9,6 +9,6 @@ public record SongRequest(
         String title,
 
         boolean isPublicSong,
-
+        String youtubeUrl,
         long artistId
 ) {}
