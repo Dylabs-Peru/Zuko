@@ -22,12 +22,13 @@ public class SongMapper {
                 song.getReleaseDate(),
                 "Canción registrada exitosamente", // O personalizado desde el servicio
                 artistId,
-                artistName
+                artistName,
+                song.getYoutubeUrl()
         );
     }
     // Convertir un SongRequest a la entidad Song
     public Song toSongEntity(SongRequest request, Artist artist) {
-        Song song = new Song(request.title(), request.isPublicSong());
+        Song song = new Song(request.title(), request.isPublicSong(), request.youtubeUrl());
         song.setArtist(artist);
         return song;
     }
