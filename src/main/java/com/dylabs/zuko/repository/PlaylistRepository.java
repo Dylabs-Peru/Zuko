@@ -12,10 +12,12 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
 
     boolean existsByNameIgnoreCaseAndUser_id(String name, Long userId);
 
-    Optional<Playlist> findByPlaylistIdAndUser_id(Long playlistId, Long usersId);
+    Optional<Playlist> findByNameIgnoreCaseAndUser_id(String name, Long userId);
 
-    List<Playlist> findAllByIsPublicTrue();
+    List<Playlist> findAllByUser_Id(Long userId);
 
-    List<Playlist> findAllByUser_id(Long userId);
+    Optional<Playlist> findByNameIgnoreCase(String name);
+
+    List<Playlist> findByisPublicTrueAndNameContainingIgnoreCase(String name);
 
 }

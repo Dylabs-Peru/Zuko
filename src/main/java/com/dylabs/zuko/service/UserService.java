@@ -102,7 +102,7 @@ public class UserService {
         }
 
         String token = JwtUtil.generateToken(user.getId().toString(), user.getUserRoleName());
-        return new AuthResponse(token);
+        return new AuthResponse(token, userMapper.toResponse(user));
     }
 
 
@@ -111,13 +111,6 @@ public class UserService {
         return users.stream().map(userMapper::toResponse).toList();
     }
 
-//    public void toggleUserActiveStatus(Long id) {
-//        User user = userRepository.findById(id)
-//                .orElseThrow(() -> new UserNotFoundExeption("Usuario con ID " + id + " no encontrado"));
-//
-//        user.setActive(!user.getIsActive());
-//        userRepository.save(user);
-//    }
 
     public void toggleUserActiveStatus(Long id) {
         User currentUser = getAuthenticatedUser();
@@ -137,6 +130,12 @@ public class UserService {
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundExeption("Usuario con ID " + id + " no encontrado"));
+        return userMapper.toResponse(user);
+    }
+
+    public UserResponse getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario con username '" + username + "' no encontrado"));
         return userMapper.toResponse(user);
     }
 

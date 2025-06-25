@@ -2,6 +2,7 @@ package com.dylabs.zuko.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -26,17 +27,17 @@ public class Album {
     @JoinColumn(name = "artist_id")
     private Artist artist;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany
     @JoinColumn(name = "album_id")
-    private List<Song> songs;
+    private List<Song> songs = new ArrayList<>();
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "genre_id")
     private Genre genre;
 
-    private LocalDate releaseDate; // Fecha de lanzamiento
+    private LocalDate releaseDate;
 
-    private LocalDate creationDate; // Nueva propiedad para la fecha de creación automática
+    private LocalDate creationDate;
 
     // Getters
 
@@ -80,7 +81,7 @@ public class Album {
 
     public void setId(Long id) {
         this.id = id;
-    } // id
+    }
 
     public void setTitle(String title) {
         this.title = title;

@@ -20,13 +20,13 @@ public record CreateUserRequest(
         @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
         String password,
 
-        String url_image,
+        String url_image,//dato no obligatorio
 
         @Size(max = 250, message = "La descripción no puede exceder 250 caracteres")
-        String description,
+        String description, //dato no obligatorio
 
-        String roleName,
+        String roleName,//dato no obligatorio con valor por defecto "USER" si no se proporciona
 
-        Boolean isActive
+        Boolean isActive//dato no obligatorio con valor por defecto true si no se proporciona
 
 ) {}

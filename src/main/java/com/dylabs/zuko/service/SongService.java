@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -53,6 +54,36 @@ public class SongService {
 
         Song saved = repository.save(song);
         return songMapper.toResponse(saved);
+    }
+
+    public List<SongResponse> getSongsByUser(String userIdFromToken) {
+        User user = userRepository.findById(Long.parseLong(userIdFromToken))
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+
+        Artist artist = artistRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ArtistNotFoundException("No tienes un perfil de artista."));
+
+        List<Song> songs = repository.findAllByArtistId(artist.getId());
+
+        if (songs.isEmpty()) {
+            throw new SongNotFoundException("Aún no has registrado canciones.");
+        }
+
+        return songs.stream()
+                .map(songMapper::toResponse)
+                .toList();
+    }
+
+    public List<SongResponse> searchPublicSongsByTitle(String title) {
+        var songs = repository.findByTitleContainingIgnoreCaseAndIsPublicSongTrue(title);
+
+        if (songs.isEmpty()) {
+            throw new SongNotFoundException("No existe la canción buscada.");
+        }
+
+        return songs.stream()
+                .map(songMapper::toResponse)
+                .toList();
     }
 
     // Editar canción

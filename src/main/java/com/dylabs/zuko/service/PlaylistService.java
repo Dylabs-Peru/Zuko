@@ -1,6 +1,7 @@
 package com.dylabs.zuko.service;
 
 import com.dylabs.zuko.dto.request.PlaylistRequest;
+import com.dylabs.zuko.dto.request.UpdatePlaylistRequest;
 import com.dylabs.zuko.dto.response.PlaylistResponse;
 import com.dylabs.zuko.dto.response.SongResponse;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
@@ -29,9 +30,9 @@ public class PlaylistService {
     private final UserRepository userRepository;
     private final PlaylistMapper playlistMapper;
 
-    public PlaylistResponse createPlaylist(String id, PlaylistRequest playlistRequest) {
-        User user = userRepository.findById(Long.parseLong(id))
-                .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado con id: " + id));
+    public PlaylistResponse createPlaylist(String userId, PlaylistRequest playlistRequest) {
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado con id: " + userId));
 
         if (playlistRepository.existsByNameIgnoreCaseAndUser_id(playlistRequest.name(), user.getId())) {
             throw new PlaylistAlreadyExistsException("Playlist con el nombre '" + playlistRequest.name() + "' ya existe para el usuario.");
@@ -43,25 +44,26 @@ public class PlaylistService {
         return playlistMapper.toResponse(savedPlaylist);
     }
 
-    public PlaylistResponse getPlaylistById(String username, Long playlistId) {
+    public PlaylistResponse getPlaylistById(String userId, Long playlistId) {
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId));
 
-        User user = userRepository.findById(Long.parseLong(username))
-                .orElseThrow(()-> new UserNotFoundExeption("Usuario no encontrado con id: " + username));
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(()-> new UserNotFoundExeption("Usuario no encontrado con id: " + userId));
 
         boolean isOwner = playlist.getUser().getId().equals(user.getId());
         boolean isPublic = playlist.isPublic();
+        boolean isAdmin = user.getUserRoleName().equalsIgnoreCase("ADMIN");
 
-        if (!isOwner && !isPublic) {
+        if (!isOwner && !isPublic && !isAdmin) {
             throw new PlaylistNotPublicException("No tienes acceso a esta playlist privada");
         }
         return playlistMapper.toResponse(playlist);
     }
 
-    public void deletePlaylist(String username, Long playlistId) {
-        User user = userRepository.findById(Long.parseLong(username))
-                .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado con email: " + username));
+    public void deletePlaylist(String userId, Long playlistId) {
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado con id: " + userId));
 
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new PlaylistNotFoundException(
@@ -76,26 +78,27 @@ public class PlaylistService {
         playlistRepository.delete(playlist);
     }
 
-    public List<SongResponse> listSongsInPlaylist(String username, Long playlistId) {
+    public List<SongResponse> listSongsInPlaylist(String userId, Long playlistId) {
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId));
 
-        User user = userRepository.findById(Long.parseLong(username))
-                .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado: " + username));
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado: " + userId));
 
         boolean isOwner = playlist.getUser().getId().equals(user.getId());
         boolean isPublic = playlist.isPublic();
-        if (!isOwner && !isPublic) {
-            throw new PlaylistNotPublicException("No tienes acceso a esta playlist privada");
+        boolean isAdmin = user.getUserRoleName().equalsIgnoreCase("ADMIN");
+        if (!isOwner && !isPublic && !isAdmin) {
+            throw new PlaylistNotPublicException("No tienes acceso a esta playlist privada " + user.getUserRoleName());
         }
             return playlist.getSongs().stream()
                     .map(playlistMapper::toSongResponse)
                     .collect(Collectors.toList());
     }
 
-    public void addSongToPlaylist(String username, Long playlistId, Long songId) {
-        User user = userRepository.findById(Long.parseLong(username))
-                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado con id: " + username));
+    public void addSongToPlaylist(String userId, Long playlistId, Long songId) {
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado con id: " + userId));
 
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId));
@@ -113,9 +116,9 @@ public class PlaylistService {
         playlistRepository.save(playlist);
     }
 
-    public void removeSongFromPlaylist(String username, Long playlistId, Long songId) {
-        User user = userRepository.findById(Long.parseLong(username))
-                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado con id: " + username));
+    public void removeSongFromPlaylist(String userId, Long playlistId, Long songId) {
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado con id: " + userId));
 
         Playlist playlist = playlistRepository.findById(playlistId)
                 .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId));
@@ -135,5 +138,76 @@ public class PlaylistService {
 
         playlistRepository.save(playlist);
     }
+
+    public PlaylistResponse getPlaylistByName(String userId, String playlistName) {
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado con id: " + userId));
+        Playlist playlist = playlistRepository.findByNameIgnoreCaseAndUser_id(playlistName, user.getId())
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con nombre: " + playlistName));
+        boolean isOwner = playlist.getUser().getId().equals(user.getId());
+        boolean isAdmin = user.getUserRoleName().equalsIgnoreCase("ADMIN");
+        boolean isPublic = playlist.isPublic();
+        if (!isOwner && !isAdmin && !isPublic) {
+            throw new PlaylistNotPublicException("No tienes acceso a esta playlist privada");
+        }
+        return playlistMapper.toResponse(playlist);
+    }
+
+    public List<PlaylistResponse> getAllPlaylistsByUser(String userId) {
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new UserNotFoundExeption("Usuario no encontrado con id: " + userId));
+        return playlistRepository.findAllByUser_Id(user.getId())
+                .stream().map(playlistMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<PlaylistResponse> searchPublicPlaylistsByName(String name) {
+        List<Playlist> playlists = playlistRepository
+                .findByisPublicTrueAndNameContainingIgnoreCase(name);
+        return playlists.stream()
+                .map(playlistMapper::toResponse)
+                .toList();
+    }
+
+
+    public PlaylistResponse editPlaylistById(Long playlistId, String userId, UpdatePlaylistRequest updatePlaylistRequest) {
+        User user = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado con id: " + userId));
+
+        Playlist playlist = playlistRepository.findById(playlistId)
+                .orElseThrow(() -> new PlaylistNotFoundException("Playlist no encontrada con ID: " + playlistId));
+
+        boolean isOwner = playlist.getUser().getId().equals(user.getId());
+        boolean isAdmin = user.getUserRoleName().equalsIgnoreCase("ADMIN");
+        if (!isOwner && !isAdmin) {
+            throw new PlaylistAccessDeniedException("No tienes permisos para modificar esta playlist.");
+        }
+
+        if (updatePlaylistRequest.name() !=null)
+        {
+            playlist.setName(updatePlaylistRequest.name());
+        }
+        if (updatePlaylistRequest.description() !=null){
+            playlist.setDescription(updatePlaylistRequest.description());
+        }
+
+        playlist.setPublic(updatePlaylistRequest.isPublic());
+
+        if (updatePlaylistRequest.url_image().isBlank()) {
+            playlist.setUrl_image(null);
+        } else {
+            playlist.setUrl_image(updatePlaylistRequest.url_image());
+        }
+
+        playlistRepository.save(playlist);
+
+        return playlistMapper.toResponse(playlist);
+
+
+    }
+
+
+
+
 
 }

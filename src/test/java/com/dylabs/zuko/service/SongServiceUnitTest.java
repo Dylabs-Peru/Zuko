@@ -22,6 +22,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -330,5 +331,77 @@ class SongServiceUnitTest {
 
         assertEquals("No puedes eliminar esta canción.", exception.getMessage());
         verify(repository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("CP01 - HU30 - Obtener canciones del artista autenticado exitosamente")
+    void getSongsByUserSuccess() {
+        Song song = new Song("Uptown Funk", true);
+        song.setId(1L);
+        song.setArtist(artist);
+        song.setReleaseDate(LocalDate.now());
+
+        SongResponse expectedResponse = new SongResponse(
+                song.getId(), song.getTitle(), song.isPublicSong(), song.getReleaseDate(),
+                "Canción registrada exitosamente", artist.getId(), artist.getName());
+
+        when(userRepository.findById(artistUser.getId())).thenReturn(Optional.of(artistUser));
+        when(artistRepository.findByUserId(artistUser.getId())).thenReturn(Optional.of(artist));
+        when(repository.findAllByArtistId(artist.getId())).thenReturn(List.of(song));
+        when(mapper.toResponse(song)).thenReturn(expectedResponse);
+
+        List<SongResponse> responseList = songService.getSongsByUser(String.valueOf(artistUser.getId()));
+
+        assertEquals(1, responseList.size());
+        assertEquals("Uptown Funk", responseList.get(0).title());
+        verify(repository).findAllByArtistId(artist.getId());
+    }
+
+    @Test
+    @DisplayName("CP02 - HU30 - Listar canciones como Artista pero no tiene canciones registradas")
+    void getSongsByArtistWithoutSongsThrows() {
+        when(userRepository.findById(artistUser.getId())).thenReturn(Optional.of(artistUser));
+        when(artistRepository.findByUserId(artistUser.getId())).thenReturn(Optional.of(artist));
+        when(repository.findAllByArtistId(artist.getId())).thenReturn(List.of());
+
+        SongNotFoundException exception = assertThrows(SongNotFoundException.class,
+                () -> songService.getSongsByUser(String.valueOf(artistUser.getId())));
+
+        assertEquals("Aún no has registrado canciones.", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("CP01 - HU31 - Buscar canciones públicas por título exitosamente")
+    void searchPublicSongsByTitleSuccess() {
+        Song song = new Song("Talking to the Moon", true);
+        song.setId(2L);
+        song.setArtist(artist);
+        song.setReleaseDate(LocalDate.now());
+
+        SongResponse expectedResponse = new SongResponse(
+                song.getId(), song.getTitle(), song.isPublicSong(), song.getReleaseDate(),
+                "Canción registrada exitosamente", artist.getId(), artist.getName());
+
+        when(repository.findByTitleContainingIgnoreCaseAndIsPublicSongTrue("Moon")).thenReturn(List.of(song));
+        when(mapper.toResponse(song)).thenReturn(expectedResponse);
+
+        List<SongResponse> result = songService.searchPublicSongsByTitle("Moon");
+
+        assertEquals(1, result.size());
+        assertEquals("Talking to the Moon", result.get(0).title());
+        verify(repository).findByTitleContainingIgnoreCaseAndIsPublicSongTrue("Moon");
+    }
+
+    @Test
+    @DisplayName("CP02 - HU31 - Buscar canciones públicas por título pero no hay coincidencias")
+    void searchPublicSongsByTitleNotFoundThrows() {
+        String title = "Inexistente";
+
+        when(repository.findByTitleContainingIgnoreCaseAndIsPublicSongTrue(title)).thenReturn(List.of());
+
+        SongNotFoundException exception = assertThrows(SongNotFoundException.class,
+                () -> songService.searchPublicSongsByTitle(title));
+
+        assertEquals("No existe la canción buscada.", exception.getMessage());
     }
 }

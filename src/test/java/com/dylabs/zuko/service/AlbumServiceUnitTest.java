@@ -4,12 +4,14 @@ import com.dylabs.zuko.dto.request.AlbumRequest;
 import com.dylabs.zuko.dto.request.SongRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
 import com.dylabs.zuko.exception.albumExceptions.*;
+import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.exception.genreExeptions.GenreNotFoundException;
 import com.dylabs.zuko.mapper.AlbumMapper;
 import com.dylabs.zuko.model.Album;
 import com.dylabs.zuko.model.Artist;
 import com.dylabs.zuko.model.Genre;
 import com.dylabs.zuko.model.User;
+import com.dylabs.zuko.model.Song;
 import com.dylabs.zuko.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,13 +32,21 @@ import static org.mockito.Mockito.*;
 
 class AlbumServiceUnitTest {
 
-    @Mock private AlbumRepository albumRepository;
-    @Mock private AlbumMapper albumMapper;
-    @Mock private UserRepository userRepository;
-    @Mock private ArtistRepository artistRepository;
-    @Mock private GenreRepository genreRepository;
+    @Mock
+    private AlbumRepository albumRepository;
+    @Mock
+    private AlbumMapper albumMapper;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private ArtistRepository artistRepository;
+    @Mock
+    private GenreRepository genreRepository;
+    @Mock
+    private SongRepository songRepository;
 
-    @InjectMocks private AlbumService albumService;
+    @InjectMocks
+    private AlbumService albumService;
 
     private Artist artist;
     private Genre genre;
@@ -48,7 +59,7 @@ class AlbumServiceUnitTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        
+
         artist = new Artist();
         artist.setId(1L);
         artist.setName("Artista Test");
@@ -82,11 +93,27 @@ class AlbumServiceUnitTest {
                         new SongRequest("Canción 2", true, artist.getId())
                 )
         );
+
+        when(songRepository.existsByTitleIgnoreCaseAndArtistId(anyString(), anyLong())).thenReturn(true);
+        when(songRepository.findAll()).thenReturn(List.of(
+
+                getMockSong("Canción 1", artist),
+                getMockSong("Canción 2", artist),
+                getMockSong("Canción válida", artist)
+        ));
+    }
+
+    private Song getMockSong(String title, Artist artist) {
+        Song song = new Song();
+        song.setTitle(title);
+        song.setArtist(artist);
+        return song;
     }
 
     @Test
     @DisplayName("CP01 - HU10 Registro exitoso del álbum con todos los datos válidos")
     void createAlbum_withValidData_successfullyCreatesAlbum() {
+
         when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
         when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
         when(genreRepository.findById(validRequest.genreId())).thenReturn(Optional.of(genre));
@@ -103,23 +130,8 @@ class AlbumServiceUnitTest {
         verify(albumRepository).save(album);
     }
 
-    
     @Test
-    @DisplayName("CP02 - HU10 Registro exitoso del álbum como ADMIN")
-    void createAlbum_asAdmin_success() {
-        when(userRepository.findById(adminUser.getId())).thenReturn(Optional.of(adminUser));
-        when(artistRepository.findById(validRequest.artistId())).thenReturn(Optional.of(artist));
-        when(genreRepository.findById(validRequest.genreId())).thenReturn(Optional.of(genre));
-        when(albumRepository.existsByTitleIgnoreCaseAndArtistId(validRequest.title(), artist.getId())).thenReturn(false);
-        when(albumMapper.toAlbumEntity(validRequest, artist, genre)).thenReturn(album);
-        when(albumRepository.save(album)).thenReturn(album);
-        when(albumMapper.toResponse(album)).thenReturn(mock(AlbumResponse.class));
-
-        assertDoesNotThrow(() -> albumService.createAlbum(validRequest, adminUser.getId().toString()));
-    }
-
-    @Test
-    @DisplayName("CP03 - HU10 Registro fallido de álbum por género inválido")
+    @DisplayName("CP02 - HU10 Registro fallido de álbum por género inválido")
     void createAlbum_withInvalidGenre_throwsGenreNotFoundException() {
         when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
         when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
@@ -130,7 +142,7 @@ class AlbumServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CP04 - HU10 Registro fallido por título duplicado")
+    @DisplayName("CP03 - HU10 Registro fallido por título duplicado")
     void createAlbum_withDuplicateTitle_throwsException() {
         when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
         when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
@@ -142,9 +154,9 @@ class AlbumServiceUnitTest {
     }
 
     @Test
-    @DisplayName("CP05 - HU10 Registro fallido al no tener canciones")
+    @DisplayName("CP04 - HU10 Registro fallido al no tener canciones")
     void createAlbum_withNullSongs_throwsAlbumValidationException() {
-        // Arrange
+
         AlbumRequest requestConSongsNulo = new AlbumRequest(
                 validRequest.title(),
                 validRequest.releaseYear(),
@@ -153,19 +165,19 @@ class AlbumServiceUnitTest {
                 validRequest.genreId(),
                 null
         );
-        
+
         when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
         when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
         when(genreRepository.findById(validRequest.genreId())).thenReturn(Optional.of(genre));
         when(albumRepository.existsByTitleIgnoreCaseAndArtistId(anyString(), anyLong())).thenReturn(false);
-        
+
         AlbumValidationException ex = assertThrows(AlbumValidationException.class,
                 () -> albumService.createAlbum(requestConSongsNulo, ownerUser.getId().toString()));
         assertEquals("El álbum debe contener al menos dos canciones.", ex.getMessage());
     }
 
     @Test
-    @DisplayName("CP06 - HU10 Registro fallido por menos de dos canciones")
+    @DisplayName("CP05 - HU10 Registro fallido por menos de dos canciones")
     void createAlbum_withLessThanTwoSongs_throwsAlbumValidationException() {
         AlbumRequest invalidRequest = new AlbumRequest(
                 "Álbum", 2023, "cover.jpg", artist.getId(), genre.getId(),
@@ -181,20 +193,50 @@ class AlbumServiceUnitTest {
                 () -> albumService.createAlbum(invalidRequest, ownerUser.getId().toString()));
     }
 
-    
     @Test
-    @DisplayName("CP07 - HU10 Registro fallido por intentar crear álbum como artista no autorizado")
-    void createAlbum_ownerCreatesAlbumForAnotherArtist_throwsPermissionException() {
-        AlbumRequest otherArtistRequest = new AlbumRequest(
-                "Título", 2023, "img.jpg", 999L, genre.getId(),
-                List.of(new SongRequest("Canción 1", true, 999L), new SongRequest("Canción 2", true, 999L))
+    @DisplayName("CP06 - HU10 Registro fallido por ingresar una canción no existente para el artista")
+    void createAlbum_fails_whenSongDoesNotExistForArtist() {
+
+        AlbumRequest request = new AlbumRequest(
+                "Álbum con canción inexistente", 2023, "cover.jpg", artist.getId(), genre.getId(),
+                List.of(new SongRequest("Canción Inexistente", true, artist.getId()), validSongRequest)
         );
 
         when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
         when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
+        when(genreRepository.findById(request.genreId())).thenReturn(Optional.of(genre));
+        when(albumRepository.existsByTitleIgnoreCaseAndArtistId(request.title(), artist.getId())).thenReturn(false);
 
-        assertThrows(AlbumPermissionException.class,
-                () -> albumService.createAlbum(otherArtistRequest, ownerUser.getId().toString()));
+        when(songRepository.existsByTitleIgnoreCaseAndArtistId(eq("Canción Inexistente"), eq(artist.getId()))).thenReturn(false);
+        when(songRepository.existsByTitleIgnoreCaseAndArtistId(eq(validSongRequest.title()), eq(artist.getId()))).thenReturn(true);
+
+        AlbumValidationException ex = assertThrows(AlbumValidationException.class,
+                () -> albumService.createAlbum(request, ownerUser.getId().toString()));
+        assertTrue(ex.getMessage().contains("no existe para este artista"));
+    }
+
+    @Test
+    @DisplayName("CP07 - HU10 Registro fallido por ingresar una canción no perteneciente al artista")
+    void createAlbum_fails_whenSongNotBelongsToArtist() {
+
+        AlbumRequest request = new AlbumRequest(
+                "Álbum con canción de otro artista", 2023, "cover.jpg", artist.getId(), genre.getId(),
+                List.of(validSongRequest, new SongRequest("Ajena", true, 999L))
+        );
+
+        when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
+        when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
+        when(genreRepository.findById(request.genreId())).thenReturn(Optional.of(genre));
+        when(albumRepository.existsByTitleIgnoreCaseAndArtistId(request.title(), artist.getId())).thenReturn(false);
+
+        when(songRepository.existsByTitleIgnoreCaseAndArtistId(anyString(), eq(artist.getId()))).thenReturn(true);
+        when(songRepository.findAll()).thenReturn(List.of(
+                getMockSong(validSongRequest.title(), artist)
+        ));
+
+        AlbumValidationException ex = assertThrows(AlbumValidationException.class,
+                () -> albumService.createAlbum(request, ownerUser.getId().toString()));
+        assertTrue(ex.getMessage().contains("no pertenece al artista"));
     }
 
 
@@ -219,13 +261,106 @@ class AlbumServiceUnitTest {
                 () -> albumService.getAlbumById(999L));
     }
 
+    @Test
+    @DisplayName("CP03 - HU11: Obtener álbumes por título del artista")
+    void getAlbumsByTitleAndUser_whenAlbumsExist_returnsFilteredAlbums() {
+        // Arrange
+        String title = "Album";
+        when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
+        when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
+        when(albumRepository.findAllByTitleContainingIgnoreCaseAndArtistId(title, artist.getId())).thenReturn(List.of(album));
+        when(albumMapper.toResponse(album)).thenReturn(mock(AlbumResponse.class));
+
+        List<AlbumResponse> result = albumService.getAlbumsByTitleAndUser(title, ownerUser.getId().toString());
+
+        assertEquals(1, result.size());
+        verify(albumRepository).findAllByTitleContainingIgnoreCaseAndArtistId(title, artist.getId());
+    }
+
+    @Test
+    @DisplayName("CP04 - HU11: Obtencion fallida de album del artista por título inexistente")
+    void getAlbumsByTitleAndUser_whenNoAlbumsExist_throwsAlbumNotFoundException() {
+
+        String title = "Titulo";
+        when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
+        when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
+        when(albumRepository.findAllByTitleContainingIgnoreCaseAndArtistId(title, artist.getId())).thenReturn(Collections.emptyList());
+
+        AlbumNotFoundException ex = assertThrows(AlbumNotFoundException.class,
+                () -> albumService.getAlbumsByTitleAndUser(title, ownerUser.getId().toString()));
+        assertEquals("No se encontraron álbumes con el título especificado para este artista.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("CP05 - HU11: Obtencion fallida del album por usuario no autorizado")
+    void getAlbumsByTitleAndUser_whenUserHasNoArtistProfile_throwsArtistNotFoundException() {
+
+        when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
+        when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.empty());
+
+        ArtistNotFoundException ex = assertThrows(ArtistNotFoundException.class,
+                () -> albumService.getAlbumsByTitleAndUser("Album", ownerUser.getId().toString()));
+        assertEquals("No tienes un perfil de artista.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("CP06 - HU11: Obtener álbum por título existente")
+    void getAlbumsByTitle_whenAlbumsExist_returnsFilteredAlbums() {
+
+        String title = "Álbum";
+        when(albumRepository.findAllByTitleContainingIgnoreCase(title)).thenReturn(List.of(album));
+        when(albumMapper.toResponse(album)).thenReturn(mock(AlbumResponse.class));
+
+        List<AlbumResponse> result = albumService.getAlbumsByTitle(title);
+
+        assertEquals(1, result.size());
+        verify(albumRepository).findAllByTitleContainingIgnoreCase(title);
+    }
+
+    @Test
+    @DisplayName("CP07 - HU11: Obtencion fallida del album por titulo inexistente")
+    void getAlbumsByTitle_whenNoAlbumsExist_throwsAlbumNotFoundException() {
+
+        String title = "Título no existente";
+        when(albumRepository.findAllByTitleContainingIgnoreCase(title)).thenReturn(Collections.emptyList());
+
+        AlbumNotFoundException ex = assertThrows(AlbumNotFoundException.class,
+                () -> albumService.getAlbumsByTitle(title));
+        assertEquals("No se encontraron álbumes con el título especificado.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("CP08 - HU11: Obtener listar de albumes existentes")
+    void getAllAlbums_whenAlbumsExist_returnsAlbumList() {
+
+        List<Album> albums = List.of(album); // Mocks de álbumes
+        when(albumRepository.findAll()).thenReturn(albums);
+        when(albumMapper.toResponse(album)).thenReturn(mock(AlbumResponse.class));
+
+        List<AlbumResponse> result = albumService.getAllAlbums();
+
+        assertEquals(1, result.size());
+        verify(albumRepository).findAll();
+    }
+
+    @Test
+    @DisplayName("CP09 - HU11: Obtencion fallida de lista por albumes inexistentes")
+    void getAllAlbums_whenNoAlbumsExist_throwsAlbumNotFoundException() {
+
+        when(albumRepository.findAll()).thenReturn(Collections.emptyList());
+
+        AlbumNotFoundException ex = assertThrows(AlbumNotFoundException.class,
+                () -> albumService.getAllAlbums());
+        assertEquals("No se encontraron álbumes.", ex.getMessage());
+    }
 
 
 
-    
+
     @Test
     @DisplayName("CP01 - HU12: Edicion exitosa de álbum como ADMIN")
     void updateAlbum_asAdmin_success() {
+
         when(albumRepository.findById(album.getId())).thenReturn(Optional.of(album));
         when(userRepository.findById(adminUser.getId())).thenReturn(Optional.of(adminUser));
         when(artistRepository.findById(validRequest.artistId())).thenReturn(Optional.of(artist));
@@ -254,7 +389,7 @@ class AlbumServiceUnitTest {
     @Test
     @DisplayName("CP03 - HU12: Edición rechazada sin canciones")
     void updateAlbum_withNullSongs_throwsAlbumValidationException() {
-        
+
         AlbumRequest requestConSongsNulo = new AlbumRequest(
                 validRequest.title(),
                 validRequest.releaseYear(),
@@ -263,13 +398,13 @@ class AlbumServiceUnitTest {
                 validRequest.genreId(),
                 null
         );
-        
+
         when(albumRepository.findById(album.getId())).thenReturn(Optional.of(album));
         when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
         when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
         when(genreRepository.findById(validRequest.genreId())).thenReturn(Optional.of(genre));
         when(albumRepository.existsByTitleIgnoreCaseAndArtistIdAndIdNot(anyString(), anyLong(), anyLong())).thenReturn(false);
-        
+
         AlbumValidationException ex = assertThrows(AlbumValidationException.class,
                 () -> albumService.updateAlbum(album.getId(), requestConSongsNulo, ownerUser.getId().toString()));
         assertEquals("El álbum debe contener al menos dos canciones.", ex.getMessage());
@@ -278,7 +413,7 @@ class AlbumServiceUnitTest {
     @Test
     @DisplayName("CP04 - HU12: Edición rechazada por menos de dos canciones")
     void updateAlbum_withLessThanTwoSongs_throwsAlbumValidationException() {
-        
+
         AlbumRequest requestConUnaCancion = new AlbumRequest(
                 validRequest.title(),
                 validRequest.releaseYear(),
@@ -287,23 +422,23 @@ class AlbumServiceUnitTest {
                 validRequest.genreId(),
                 List.of(validSongRequest)
         );
-        
+
         when(albumRepository.findById(album.getId())).thenReturn(Optional.of(album));
         when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
         when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
         when(genreRepository.findById(validRequest.genreId())).thenReturn(Optional.of(genre));
         when(albumRepository.existsByTitleIgnoreCaseAndArtistIdAndIdNot(anyString(), anyLong(), anyLong())).thenReturn(false);
-        
+
         AlbumValidationException ex = assertThrows(AlbumValidationException.class,
                 () -> albumService.updateAlbum(album.getId(), requestConUnaCancion, ownerUser.getId().toString()));
         assertEquals("El álbum debe contener al menos dos canciones.", ex.getMessage());
     }
 
-    
+
     @Test
     @DisplayName("CP05 - HU12: Edición rechazada por artista no autorizado")
     void updateAlbum_withWrongArtist_throwsAccessDeniedException() {
-        
+
         Artist otroArtista = new Artist();
         otroArtista.setId(999L);
         album.setArtist(otroArtista);
@@ -317,6 +452,54 @@ class AlbumServiceUnitTest {
         Exception ex = assertThrows(AccessDeniedException.class,
                 () -> albumService.updateAlbum(album.getId(), validRequest, ownerUser.getId().toString()));
         assertEquals("No puedes modificar este álbum.", ex.getMessage());
+    }
+
+    @Test
+    @DisplayName("CP06 - HU12: Edición fallida por ingresar una canción no existente para el artista")
+    void updateAlbum_fails_whenSongDoesNotExistForArtist() {
+
+        AlbumRequest request = new AlbumRequest(
+                "Álbum Editado", 2023, "cover.jpg", artist.getId(), genre.getId(),
+                List.of(new SongRequest("Desconocida", true, artist.getId()), validSongRequest)
+        );
+
+        when(albumRepository.findById(album.getId())).thenReturn(Optional.of(album));
+        when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
+        when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
+        when(genreRepository.findById(request.genreId())).thenReturn(Optional.of(genre));
+        when(albumRepository.existsByTitleIgnoreCaseAndArtistIdAndIdNot(request.title(), artist.getId(), album.getId())).thenReturn(false);
+
+        when(songRepository.existsByTitleIgnoreCaseAndArtistId(eq("Desconocida"), eq(artist.getId()))).thenReturn(false);
+        when(songRepository.existsByTitleIgnoreCaseAndArtistId(eq(validSongRequest.title()), eq(artist.getId()))).thenReturn(true);
+
+        AlbumValidationException ex = assertThrows(AlbumValidationException.class,
+                () -> albumService.updateAlbum(album.getId(), request, ownerUser.getId().toString()));
+        assertTrue(ex.getMessage().contains("no existe para este artista"));
+    }
+
+    @Test
+    @DisplayName("CP07 - HU12: Edición fallida por ingresar una canción no perteneciente al artista")
+    void updateAlbum_fails_whenSongNotBelongsToArtist() {
+
+        AlbumRequest request = new AlbumRequest(
+                "Álbum Editado", 2023, "cover.jpg", artist.getId(), genre.getId(),
+                List.of(validSongRequest, new SongRequest("Ajena", true, 999L))
+        );
+
+        when(albumRepository.findById(album.getId())).thenReturn(Optional.of(album));
+        when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
+        when(artistRepository.findByUserId(ownerUser.getId())).thenReturn(Optional.of(artist));
+        when(genreRepository.findById(request.genreId())).thenReturn(Optional.of(genre));
+        when(albumRepository.existsByTitleIgnoreCaseAndArtistIdAndIdNot(request.title(), artist.getId(), album.getId())).thenReturn(false);
+
+        when(songRepository.existsByTitleIgnoreCaseAndArtistId(anyString(), eq(artist.getId()))).thenReturn(true);
+        when(songRepository.findAll()).thenReturn(List.of(
+                getMockSong(validSongRequest.title(), artist)
+        ));
+
+        AlbumValidationException ex = assertThrows(AlbumValidationException.class,
+                () -> albumService.updateAlbum(album.getId(), request, ownerUser.getId().toString()));
+        assertTrue(ex.getMessage().contains("no pertenece al artista"));
     }
 
 
@@ -333,7 +516,7 @@ class AlbumServiceUnitTest {
         verify(albumRepository).delete(album);
     }
 
-    
+
     @Test
     @DisplayName("CP02 - HU27: Eliminacion exitosa de un álbum como ADMIN")
     void deleteAlbum_asAdmin_success() {
@@ -344,7 +527,7 @@ class AlbumServiceUnitTest {
         verify(albumRepository).delete(album);
     }
 
-    
+
     @Test
     @DisplayName("CP03 - HU27: Eliminación fallida por falta de autorización")
     void deleteAlbum_withoutPermission_throwsException() {

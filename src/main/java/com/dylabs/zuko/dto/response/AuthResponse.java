@@ -1,4 +1,6 @@
 package com.dylabs.zuko.dto.response;
 
-public record AuthResponse (String token){
+public record AuthResponse (String token, UserResponse user) {
+
+
 }
