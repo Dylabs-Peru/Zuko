@@ -45,7 +45,7 @@ class PlaylistServiceUnitTest {
         User user = new User(); user.setId(1L);
         Playlist playlist = new Playlist(); playlist.setUser(user);
         Playlist saved = new Playlist(); saved.setUser(user);
-        PlaylistResponse response = new PlaylistResponse(1L, "Test", "desc", true, null, Set.of(), "si");
+        PlaylistResponse response = new PlaylistResponse(1L, "Test", "desc", true, null, Set.of(), "si", 1L);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(playlistRepository.existsByNameIgnoreCaseAndUser_id("Test", 1L)).thenReturn(false);

@@ -81,10 +81,10 @@ public class PlaylistController {
                 new ApiResponse<>("Canción eliminada correctamente", null));
     }
 
-    @GetMapping("/public/by-name/{playlistName}")
-    public ResponseEntity<Object> getPublicPlaylistByName(@PathVariable String playlistName) {
-        PlaylistResponse response = playlistService.getPublicPlaylistByName(playlistName);
-        return ResponseEntity.ok(new ApiResponse<>("Playlist obtenida correctamente", response));
+    @GetMapping("/public/search")
+    public ResponseEntity<Object> searchPublicPlaylistsByName(@RequestParam String name) {
+        List<PlaylistResponse> playlists = playlistService.searchPublicPlaylistsByName(name);
+        return ResponseEntity.ok(new ApiResponse<>("Playlists encontradas", playlists));
     }
 
     @GetMapping("/by-name/{playlistName}")
