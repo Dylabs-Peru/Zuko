@@ -9,8 +9,10 @@ import com.dylabs.zuko.exception.userExeptions.IncorretPasswordExeption;
 import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
 import com.dylabs.zuko.exception.userExeptions.UserNotFoundExeption;
 import com.dylabs.zuko.exception.roleExeptions.*;
+import com.dylabs.zuko.model.Shortcuts;
 import com.dylabs.zuko.model.User;
 import com.dylabs.zuko.model.Role;
+import com.dylabs.zuko.repository.ShortcutsRepository;
 import com.dylabs.zuko.repository.UserRepository;
 import com.dylabs.zuko.repository.RoleRepository;
 import com.dylabs.zuko.mapper.UserMapper;
@@ -47,6 +49,8 @@ public class UserService {
 
     @Autowired
     private UserDetailsService userDetailsService;
+    @Autowired
+    private ShortcutsRepository shortcutsRepository;
 
     public UserResponse toResponse(User user) {
         return new UserResponse(
@@ -82,6 +86,10 @@ public class UserService {
         user.setActive(request.isActive() == null ? true : request.isActive());
 
         User savedUser = userRepository.save(user);
+
+        Shortcuts shortcuts = new Shortcuts();
+        shortcuts.setUser(user);
+        shortcutsRepository.save(shortcuts);
         return userMapper.toResponse(savedUser);
     }
 

@@ -10,7 +10,7 @@ public class Shortcuts {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
     @ManyToMany
@@ -24,7 +24,7 @@ public class Shortcuts {
 
     @ManyToMany
     @JoinTable(
-            name = "shortcuts_playlists",
+            name = "shortcuts_albums",
             joinColumns = @JoinColumn(name = "shortcuts_id"),
             inverseJoinColumns = @JoinColumn(name = "album_id")
 
@@ -32,5 +32,35 @@ public class Shortcuts {
     private Set<Album> albums = new HashSet<>();
 
 
+    public Long getId() {
+        return id;
+    }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Set<Playlist> getPlaylists() {
+        return playlists;
+    }
+
+    public void setPlaylists(Set<Playlist> playlists) {
+        this.playlists = playlists;
+    }
+
+    public Set<Album> getAlbums() {
+        return albums;
+    }
+
+    public void setAlbums(Set<Album> albums) {
+        this.albums = albums;
+    }
 }
