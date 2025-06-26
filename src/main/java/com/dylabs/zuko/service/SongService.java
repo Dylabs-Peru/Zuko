@@ -120,7 +120,9 @@ public class SongService {
                 updated.getReleaseDate(),
                 "La canción ha sido actualizada correctamente.",
                 updated.getArtist().getId(),
-                updated.getArtist().getName()
+                updated.getArtist().getName(),
+                updated.getYoutubeUrl()
+
         );
     }
 
@@ -149,7 +151,9 @@ public class SongService {
                 song.getReleaseDate(),
                 "La canción ha sido eliminada correctamente.",
                 song.getArtist().getId(),
-                song.getArtist().getName()
+                song.getArtist().getName(),
+                song.getYoutubeUrl()
+
         );
     }
 }

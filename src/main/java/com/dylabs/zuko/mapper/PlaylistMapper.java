@@ -53,7 +53,9 @@ public class PlaylistMapper {
                 song.getReleaseDate(),
                 null,
                 song.getArtist().getId(),
-                song.getArtist().getName()
+                song.getArtist().getName(),
+                song.getYoutubeUrl()
+
         );
     }
 

@@ -70,12 +70,12 @@ class SongServiceUnitTest {
     @Test
     @DisplayName("CP01 - HU01 - Crear canción como Administrador exitosamente")
     void createSongAsAdminSuccess() {
-        SongRequest request = new SongRequest("Just The Way You Are", true, artist.getId());
-        Song song = new Song(request.title(), request.isPublicSong());
+        SongRequest request = new SongRequest("Just The Way You Are", true, "", artist.getId());
+        Song song = new Song(request.title(), request.isPublicSong(), request.youtubeUrl());
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
 
-        SongResponse expectedResponse = new SongResponse(1L, request.title(), request.isPublicSong(), song.getReleaseDate(), "Canción registrada exitosamente", artist.getId(), artist.getName());
+        SongResponse expectedResponse = new SongResponse(1L, request.title(), request.isPublicSong(), song.getReleaseDate(), "Canción registrada exitosamente", artist.getId(), artist.getName(),"");
 
         when(userRepository.findById(adminUser.getId())).thenReturn(Optional.of(adminUser));
         when(artistRepository.findById(artist.getId())).thenReturn(Optional.of(artist));
@@ -95,12 +95,12 @@ class SongServiceUnitTest {
     @Test
     @DisplayName("CP02 - HU01 - Crear canción como Artista exitosamente")
     void createSongAsArtistSuccess() {
-        SongRequest request = new SongRequest("Locked Out of Heaven", true, 99L);
-        Song song = new Song(request.title(), request.isPublicSong());
+        SongRequest request = new SongRequest("Locked Out of Heaven", true, "", 99L);
+        Song song = new Song(request.title(), request.isPublicSong(), request.youtubeUrl());
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
 
-        SongResponse expectedResponse = new SongResponse(1L, request.title(), request.isPublicSong(), song.getReleaseDate(), "Canción registrada exitosamente", artist.getId(), artist.getName());
+        SongResponse expectedResponse = new SongResponse(1L, request.title(), request.isPublicSong(), song.getReleaseDate(), "Canción registrada exitosamente", artist.getId(), artist.getName(), "");
 
         when(userRepository.findById(artistUser.getId())).thenReturn(Optional.of(artistUser));
         when(artistRepository.findByUserId(artistUser.getId())).thenReturn(Optional.of(artist));
@@ -119,7 +119,7 @@ class SongServiceUnitTest {
     @Test
     @DisplayName("CP03 - HU01  Crear canción con título duplicado")
     void createSongTitleDuplicateThrows() {
-        SongRequest request = new SongRequest("Grenade", true, artist.getId());
+        SongRequest request = new SongRequest("Grenade", true,  "", artist.getId());
 
         when(userRepository.findById(adminUser.getId())).thenReturn(Optional.of(adminUser));
         when(artistRepository.findById(artist.getId())).thenReturn(Optional.of(artist));
@@ -134,9 +134,9 @@ class SongServiceUnitTest {
     @DisplayName("CP01 - HU02 - Editar canción como Administrador exitosamente")
     void updateSongAsAdminSuccess() {
         Long songId = 1L;
-        SongRequest request = new SongRequest("Grenade", true, artist.getId());
+        SongRequest request = new SongRequest("Grenade", true, "", artist.getId());
 
-        Song song = new Song("Old Title", false);
+        Song song = new Song("Old Title", false, "");
         song.setId(songId);
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
@@ -157,9 +157,9 @@ class SongServiceUnitTest {
     @DisplayName("CP02 - HU02 - Editar canción como Artista exitosamente")
     void updateSongAsArtistSuccess() {
         Long songId = 1L;
-        SongRequest request = new SongRequest("Locked Out of Heaven", true, 99L);
+        SongRequest request = new SongRequest("Locked Out of Heaven", true, "", 99L);
 
-        Song song = new Song("Grenade", false);
+        Song song = new Song("Grenade", false, "");
         song.setId(songId);
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
@@ -179,7 +179,7 @@ class SongServiceUnitTest {
     @DisplayName("CP03 - HU02 - Editar canción inexistente")
     void updateSongNotFoundThrows() {
         Long songId = 99L;
-        SongRequest request = new SongRequest("Locked Out of Heaven", true, artist.getId());
+        SongRequest request = new SongRequest("Locked Out of Heaven", true, "", artist.getId());
 
         when(userRepository.findById(adminUser.getId())).thenReturn(Optional.of(adminUser));
         when(repository.findById(songId)).thenReturn(Optional.empty());
@@ -196,7 +196,7 @@ class SongServiceUnitTest {
     @DisplayName("CP01 - HU03 - Eliminar canción como Administrador exitosamente")
     void deleteSongAsAdminSuccess() {
         Long songId = 1L;
-        Song song = new Song("Treasure", true);
+        Song song = new Song("Treasure", true, "");
         song.setId(songId);
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
@@ -215,7 +215,7 @@ class SongServiceUnitTest {
     @DisplayName("CP02 - HU03 - Eliminar canción como Artista exitosamente")
     void deleteSongAsArtistSuccess() {
         Long songId = 1L;
-        Song song = new Song("Treasure", true);
+        Song song = new Song("Treasure", true, "");
         song.setId(songId);
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
@@ -249,8 +249,8 @@ class SongServiceUnitTest {
     @DisplayName("CP04 - HU02 - Editar canción como Usuario sin perfil de artista")
     void updateSongAsArtistWithoutProfileThrows() {
         Long songId = 1L;
-        SongRequest request = new SongRequest("New Title", true, 99L);
-        Song song = new Song("Old Title", false);
+        SongRequest request = new SongRequest("New Title", true, "", 99L);
+        Song song = new Song("Old Title", false, "");
         song.setId(songId);
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
@@ -270,8 +270,8 @@ class SongServiceUnitTest {
     @DisplayName("CP05 - HU02 - Editar canción como Artista pero no le pertenece la canción")
     void updateSongAsArtistNotOwnerThrows() {
         Long songId = 1L;
-        SongRequest request = new SongRequest("New Title", true, 99L);
-        Song song = new Song("Old Title", false);
+        SongRequest request = new SongRequest("New Title", true, "", 99L);
+        Song song = new Song("Old Title", false, "");
         song.setId(songId);
         Artist anotherArtist = new Artist();
         anotherArtist.setId(999L);
@@ -294,7 +294,7 @@ class SongServiceUnitTest {
     @DisplayName("CP04 - HU03 -Eliminar canción como Usuario sin perfil de artista")
     void deleteSongAsArtistWithoutProfileThrows() {
         Long songId = 1L;
-        Song song = new Song("Title", true);
+        Song song = new Song("Title", true, "");
         song.setId(songId);
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
@@ -315,7 +315,7 @@ class SongServiceUnitTest {
     @DisplayName("CP05 - HU03 - Eliminar canción como Artista pero no le pertenece la canción")
     void deleteSongAsArtistNotOwnerThrows() {
         Long songId = 1L;
-        Song song = new Song("Title", true);
+        Song song = new Song("Title", true, "");
         song.setId(songId);
         Artist anotherArtist = new Artist();
         anotherArtist.setId(999L);
@@ -336,14 +336,14 @@ class SongServiceUnitTest {
     @Test
     @DisplayName("CP01 - HU30 - Obtener canciones del artista autenticado exitosamente")
     void getSongsByUserSuccess() {
-        Song song = new Song("Uptown Funk", true);
+        Song song = new Song("Uptown Funk", true, "");
         song.setId(1L);
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
 
         SongResponse expectedResponse = new SongResponse(
                 song.getId(), song.getTitle(), song.isPublicSong(), song.getReleaseDate(),
-                "Canción registrada exitosamente", artist.getId(), artist.getName());
+                "Canción registrada exitosamente", artist.getId(), artist.getName(), "");
 
         when(userRepository.findById(artistUser.getId())).thenReturn(Optional.of(artistUser));
         when(artistRepository.findByUserId(artistUser.getId())).thenReturn(Optional.of(artist));
@@ -373,14 +373,14 @@ class SongServiceUnitTest {
     @Test
     @DisplayName("CP01 - HU31 - Buscar canciones públicas por título exitosamente")
     void searchPublicSongsByTitleSuccess() {
-        Song song = new Song("Talking to the Moon", true);
+        Song song = new Song("Talking to the Moon", true, "");
         song.setId(2L);
         song.setArtist(artist);
         song.setReleaseDate(LocalDate.now());
 
         SongResponse expectedResponse = new SongResponse(
                 song.getId(), song.getTitle(), song.isPublicSong(), song.getReleaseDate(),
-                "Canción registrada exitosamente", artist.getId(), artist.getName());
+                "Canción registrada exitosamente", artist.getId(), artist.getName(), "");
 
         when(repository.findByTitleContainingIgnoreCaseAndIsPublicSongTrue("Moon")).thenReturn(List.of(song));
         when(mapper.toResponse(song)).thenReturn(expectedResponse);
