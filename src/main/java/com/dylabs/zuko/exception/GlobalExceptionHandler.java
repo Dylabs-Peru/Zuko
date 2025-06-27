@@ -114,6 +114,16 @@ public class GlobalExceptionHandler {
         problem.setProperty("timestamp", Instant.now());
         return problem;
     }
+
+    @ExceptionHandler(OAuthException.class)
+    public ProblemDetail handleOAuthException(OAuthException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Error de OAuth");
+        problem.setType(URI.create("/errors/oauth-error"));
+        problem.setProperty("timestamp", Instant.now());
+        return problem;
+    }
+
     @ExceptionHandler(ArtistAlreadyExistsException.class)
     public ProblemDetail handleArtistAlreadyExists(ArtistAlreadyExistsException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
