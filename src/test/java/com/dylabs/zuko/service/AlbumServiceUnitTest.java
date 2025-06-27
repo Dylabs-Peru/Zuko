@@ -84,13 +84,13 @@ class AlbumServiceUnitTest {
         album.setArtist(artist);
         album.setGenre(genre);
 
-        validSongRequest = new SongRequest("Canción válida", true,"",  artist.getId());
+        validSongRequest = new SongRequest("Canción válida", true,"", "",  artist.getId());
 
         validRequest = new AlbumRequest(
                 "Nuevo Álbum", 2023, "cover.jpg", artist.getId(), genre.getId(),
                 List.of(
-                        new SongRequest("Canción 1", true, "", artist.getId()),
-                        new SongRequest("Canción 2", true,"", artist.getId())
+                        new SongRequest("Canción 1", true, "", "", artist.getId()),
+                        new SongRequest("Canción 2", true,"","", artist.getId())
                 )
         );
 
@@ -181,7 +181,7 @@ class AlbumServiceUnitTest {
     void createAlbum_withLessThanTwoSongs_throwsAlbumValidationException() {
         AlbumRequest invalidRequest = new AlbumRequest(
                 "Álbum", 2023, "cover.jpg", artist.getId(), genre.getId(),
-                List.of(new SongRequest("Una sola", true, "", artist.getId()))
+                List.of(new SongRequest("Una sola", true, "", "", artist.getId()))
         );
 
         when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
@@ -199,7 +199,7 @@ class AlbumServiceUnitTest {
 
         AlbumRequest request = new AlbumRequest(
                 "Álbum con canción inexistente", 2023, "cover.jpg", artist.getId(), genre.getId(),
-                List.of(new SongRequest("Canción Inexistente", true, "", artist.getId()), validSongRequest)
+                List.of(new SongRequest("Canción Inexistente", true, "",  "",artist.getId()), validSongRequest)
         );
 
         when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
@@ -221,7 +221,7 @@ class AlbumServiceUnitTest {
 
         AlbumRequest request = new AlbumRequest(
                 "Álbum con canción de otro artista", 2023, "cover.jpg", artist.getId(), genre.getId(),
-                List.of(validSongRequest, new SongRequest("Ajena", true, "", 999L))
+                List.of(validSongRequest, new SongRequest("Ajena", true, "", "", 999L))
         );
 
         when(userRepository.findById(ownerUser.getId())).thenReturn(Optional.of(ownerUser));
@@ -460,7 +460,7 @@ class AlbumServiceUnitTest {
 
         AlbumRequest request = new AlbumRequest(
                 "Álbum Editado", 2023, "cover.jpg", artist.getId(), genre.getId(),
-                List.of(new SongRequest("Desconocida", true, "", artist.getId()), validSongRequest)
+                List.of(new SongRequest("Desconocida", true, "", "",artist.getId()), validSongRequest)
         );
 
         when(albumRepository.findById(album.getId())).thenReturn(Optional.of(album));
@@ -483,7 +483,7 @@ class AlbumServiceUnitTest {
 
         AlbumRequest request = new AlbumRequest(
                 "Álbum Editado", 2023, "cover.jpg", artist.getId(), genre.getId(),
-                List.of(validSongRequest, new SongRequest("Ajena", true, "", 999L))
+                List.of(validSongRequest, new SongRequest("Ajena", true, "", "", 999L))
         );
 
         when(albumRepository.findById(album.getId())).thenReturn(Optional.of(album));
