@@ -1,9 +1,11 @@
 package com.dylabs.zuko.service;
 
 import com.dylabs.zuko.dto.request.CreateUserRequest;
+import com.dylabs.zuko.dto.request.GoogleOAuthRequest;
 import com.dylabs.zuko.dto.request.LoginRequest;
 import com.dylabs.zuko.dto.request.UpdateUserRequest;
 import com.dylabs.zuko.dto.response.AuthResponse;
+import com.dylabs.zuko.dto.response.GoogleUserInfo;
 import com.dylabs.zuko.dto.response.UserResponse;
 import com.dylabs.zuko.exception.userExeptions.IncorretPasswordExeption;
 import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
@@ -40,6 +42,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
+    private final GoogleOAuthService googleOAuthService;
 
     @Autowired
     private AuthenticationManager authManager;
@@ -265,5 +268,91 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundExeption("Usuario autenticado no encontrado"));
     }
 
+    // OAuth 2.0 Google Methods
 
+    public AuthResponse loginWithGoogle(GoogleOAuthRequest request) {
+        try {
+            GoogleUserInfo googleUser = googleOAuthService.getUserInfo(request.googleToken());
+
+            if (!Boolean.TRUE.equals(googleUser.emailVerified())) {
+                throw new RuntimeException("El email de Google no está verificado");
+            }
+
+            Optional<User> existingUser = userRepository.findByEmailIgnoreCase(googleUser.email());
+
+            if (existingUser.isPresent()) {
+                User user = existingUser.get();
+
+                if (!user.getIsActive()) {
+                    throw new UserNotFoundExeption("El usuario está desactivado.");
+                }
+
+                String token = JwtUtil.generateToken(user.getId().toString(), user.getUserRoleName());
+                return new AuthResponse(token, userMapper.toResponse(user));
+            } else {
+                throw new UserNotFoundExeption("No existe una cuenta asociada a este email de Google. Por favor, regístrate primero.");
+            }
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error en el login con Google: " + e.getMessage());
+        }
+    }
+
+    public AuthResponse registerWithGoogle(GoogleOAuthRequest request) {
+        try {
+            GoogleUserInfo googleUser = googleOAuthService.getUserInfo(request.googleToken());
+
+            if (!Boolean.TRUE.equals(googleUser.emailVerified())) {
+                throw new RuntimeException("El email de Google no está verificado");
+            }
+
+            if (userRepository.findByEmailIgnoreCase(googleUser.email()).isPresent()) {
+                throw new UserAlreadyExistsException("Ya existe una cuenta con este correo electrónico.");
+            }
+
+            // Crear username único basado en el nombre de Google
+            String baseUsername = googleUser.name().replaceAll("\\s+", "").toLowerCase();
+            String username = generateUniqueUsername(baseUsername);
+
+            // Obtener el rol por defecto "User"
+            Role userRole = roleRepository.findByRoleNameIgnoreCase("User")
+                    .orElseThrow(() -> new RoleNotFoundException("El rol 'User' no existe."));
+
+            // Crear el usuario
+            User user = User.builder()
+                    .username(username)
+                    .email(googleUser.email())
+                    .url_image(googleUser.picture())
+                    .description("Usuario registrado con Google")
+                    .password(passwordEncoder.encode("GOOGLE_OAUTH_USER")) // Password placeholder
+                    .userRole(userRole)
+                    .isActive(true)
+                    .build();
+
+            User savedUser = userRepository.save(user);
+
+            // Crear shortcuts para el nuevo usuario
+            Shortcuts shortcuts = new Shortcuts();
+            shortcuts.setUser(savedUser);
+            shortcutsRepository.save(shortcuts);
+
+            String token = JwtUtil.generateToken(savedUser.getId().toString(), savedUser.getUserRoleName());
+            return new AuthResponse(token, userMapper.toResponse(savedUser));
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error en el registro con Google: " + e.getMessage());
+        }
+    }
+
+    private String generateUniqueUsername(String baseUsername) {
+        String username = baseUsername;
+        int counter = 1;
+
+        while (userRepository.findByUsername(username).isPresent()) {
+            username = baseUsername + counter;
+            counter++;
+        }
+
+        return username;
+    }
 }
