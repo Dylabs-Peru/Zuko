@@ -114,6 +114,17 @@ public class PlaylistController {
 
     }
 
+    @GetMapping("/mine/search")
+    public ResponseEntity<Object> searchMyPlaylistsByName(
+            @RequestParam String name,
+            Authentication authentication
+    ) {
+        String userId = authentication.getName();
+        List<PlaylistResponse> playlists = playlistService.searchMyPlaylistsByName(userId, name);
+        return ResponseEntity.ok(new ApiResponse<>("Playlists encontradas", playlists));
+    }
+
+
 
 
 
