@@ -8,6 +8,7 @@ import com.dylabs.zuko.dto.response.AuthResponse;
 import com.dylabs.zuko.dto.response.GoogleUserInfo;
 import com.dylabs.zuko.dto.response.UserResponse;
 import com.dylabs.zuko.exception.userExeptions.IncorretPasswordExeption;
+import com.dylabs.zuko.exception.userExeptions.OAuthException;
 import com.dylabs.zuko.exception.userExeptions.UserAlreadyExistsException;
 import com.dylabs.zuko.exception.userExeptions.UserNotFoundExeption;
 import com.dylabs.zuko.exception.roleExeptions.*;
@@ -275,7 +276,7 @@ public class UserService {
             GoogleUserInfo googleUser = googleOAuthService.getUserInfo(request.googleToken());
 
             if (!Boolean.TRUE.equals(googleUser.emailVerified())) {
-                throw new RuntimeException("El email de Google no está verificado");
+                throw new OAuthException("El email de Google no está verificado");
             }
 
             Optional<User> existingUser = userRepository.findByEmailIgnoreCase(googleUser.email());
@@ -293,8 +294,10 @@ public class UserService {
                 throw new UserNotFoundExeption("No existe una cuenta asociada a este email de Google. Por favor, regístrate primero.");
             }
 
+        } catch (UserNotFoundExeption | OAuthException e) {
+            throw e; // Re-lanzar excepciones específicas
         } catch (Exception e) {
-            throw new RuntimeException("Error en el login con Google: " + e.getMessage());
+            throw new OAuthException("Error en el login con Google: " + e.getMessage(), e);
         }
     }
 
@@ -303,7 +306,7 @@ public class UserService {
             GoogleUserInfo googleUser = googleOAuthService.getUserInfo(request.googleToken());
 
             if (!Boolean.TRUE.equals(googleUser.emailVerified())) {
-                throw new RuntimeException("El email de Google no está verificado");
+                throw new OAuthException("El email de Google no está verificado");
             }
 
             if (userRepository.findByEmailIgnoreCase(googleUser.email()).isPresent()) {
@@ -339,8 +342,10 @@ public class UserService {
             String token = JwtUtil.generateToken(savedUser.getId().toString(), savedUser.getUserRoleName());
             return new AuthResponse(token, userMapper.toResponse(savedUser));
 
+        } catch (UserAlreadyExistsException | RoleNotFoundException | OAuthException e) {
+            throw e; // Re-lanzar excepciones específicas
         } catch (Exception e) {
-            throw new RuntimeException("Error en el registro con Google: " + e.getMessage());
+            throw new OAuthException("Error en el registro con Google: " + e.getMessage(), e);
         }
     }
 

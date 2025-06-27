@@ -1,26 +1,29 @@
 package com.dylabs.zuko.service;
 
 import com.dylabs.zuko.dto.response.GoogleUserInfo;
+import com.dylabs.zuko.exception.userExeptions.OAuthException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Base64;
 
 @Service
 @RequiredArgsConstructor
 public class GoogleOAuthService {
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    private static final String GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
 
     public GoogleUserInfo getUserInfo(String jwtToken) {
         try {
             // Decodificar el JWT directamente (sin llamada HTTP)
             return decodeGoogleJWT(jwtToken);
         } catch (Exception e) {
-            throw new RuntimeException("Error al procesar el JWT de Google: " + e.getMessage());
+            throw new OAuthException("Error al procesar el JWT de Google: " + e.getMessage(), e);
         }
     }
 
@@ -59,7 +62,7 @@ public class GoogleOAuthService {
             );
 
         } catch (Exception e) {
-            throw new RuntimeException("Error decodificando JWT de Google: " + e.getMessage());
+            throw new OAuthException("Error decodificando JWT de Google: " + e.getMessage(), e);
         }
     }
 
