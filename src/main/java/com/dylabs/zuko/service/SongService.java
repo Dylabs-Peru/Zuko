@@ -74,6 +74,12 @@ public class SongService {
                 .toList();
     }
 
+    public SongResponse getSongById(Long id) {
+        Song song = repository.findById(id)
+                .orElseThrow(() -> new SongNotFoundException("Canción no encontrada con ID: " + id));
+        return songMapper.toResponse(song);
+    }
+
     public List<SongResponse> searchPublicSongsByTitle(String title) {
         var songs = repository.findByTitleContainingIgnoreCaseAndIsPublicSongTrue(title);
 
@@ -110,6 +116,8 @@ public class SongService {
 
         song.setTitle(request.title());
         song.setPublicSong(request.isPublicSong());
+        song.setYoutubeUrl(request.youtubeUrl());
+        song.setImageUrl(request.imageUrl());
 
         Song updated = repository.save(song);
 
@@ -121,7 +129,8 @@ public class SongService {
                 "La canción ha sido actualizada correctamente.",
                 updated.getArtist().getId(),
                 updated.getArtist().getName(),
-                updated.getYoutubeUrl()
+                updated.getYoutubeUrl(),
+                updated.getImageUrl()
 
         );
     }
@@ -152,8 +161,15 @@ public class SongService {
                 "La canción ha sido eliminada correctamente.",
                 song.getArtist().getId(),
                 song.getArtist().getName(),
-                song.getYoutubeUrl()
+                song.getYoutubeUrl(),
+                song.getImageUrl()
 
         );
+    }
+
+    public List<SongResponse> getSongsByArtistId(Long artistId) {
+        return repository.findAllByArtistId(artistId).stream()
+                .map(songMapper::toResponse)
+                .toList();
     }
 }
