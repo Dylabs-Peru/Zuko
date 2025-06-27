@@ -7,6 +7,7 @@ import com.dylabs.zuko.exception.albumExceptions.AlbumValidationException;
 import com.dylabs.zuko.exception.genreExeptions.GenreInUseException;
 import com.dylabs.zuko.exception.playlistExceptions.*;
 import com.dylabs.zuko.exception.roleExeptions.*;
+import com.dylabs.zuko.exception.shortcutsExceptions.PlaylistAlreadyInShortcutsException;
 import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
 import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
 import com.dylabs.zuko.exception.userExeptions.*;
@@ -240,7 +241,7 @@ public class GlobalExceptionHandler {
             SongNotInPlaylistException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("La canción no pertenece a la Playlist");
-        problem.setType(URI.create("erros/song-not-in-playlist"));
+        problem.setType(URI.create("errors/song-not-in-playlist"));
         problem.setProperty("timestamp", Instant.now().toString());
         return problem;
     }
@@ -250,7 +251,7 @@ public class GlobalExceptionHandler {
             PlaylistAccessDeniedException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
         problem.setTitle("No autorizado para operar sobre la playlist");
-        problem.setType(URI.create("https://yourapi.com/problems/playlist-access-denied"));
+        problem.setType(URI.create("errors/playlist-access-denied"));
         problem.setProperty("timestamp", Instant.now().toString());
         return problem;
     }
@@ -260,7 +261,17 @@ public class GlobalExceptionHandler {
             PlaylistNotPublicException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
         problem.setTitle("La playlist es privada");
-        problem.setType(URI.create("https://yourapi.com/problems/playlist-not-public"));
+        problem.setType(URI.create("errors/playlist-not-public"));
+        problem.setProperty("timestamp", Instant.now().toString());
+        return problem;
+    }
+
+    @ExceptionHandler(PlaylistAlreadyInShortcutsException.class)
+    public ProblemDetail handlePlaylistAlreadyInShortcuts(
+            PlaylistAlreadyInShortcutsException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Playlist ya incluída en tus accesos directos");
+        problem.setType(URI.create("errors/playlist-already-in-shortcuts"));
         problem.setProperty("timestamp", Instant.now().toString());
         return problem;
     }
