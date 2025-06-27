@@ -45,10 +45,22 @@ public class SongController {
         return ResponseEntity.ok(songs);
     }
 
+    @GetMapping("/by-artist")
+    public ResponseEntity<List<SongResponse>> getSongs(@RequestParam Long artistId) {
+        List<SongResponse> songs = songService.getSongsByArtistId(artistId);
+        return ResponseEntity.ok(songs);
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<SongResponse>> searchSongs(@RequestParam String title) {
         List<SongResponse> songs = songService.searchPublicSongsByTitle(title);
         return ResponseEntity.ok(songs);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SongResponse> getSongById(@PathVariable Long id) {
+        SongResponse song = songService.getSongById(id);
+        return ResponseEntity.ok(song);
     }
 
     @DeleteMapping("/{id}")
