@@ -16,6 +16,8 @@ public class Song {
     private boolean isPublicSong;
     private LocalDate releaseDate;
 
+    @Column(name = "image_url")
+    private String imageUrl;
     @Column(name = "youtube_url")
     private String youtubeUrl;
     @ManyToOne
@@ -24,11 +26,12 @@ public class Song {
 
     public Song() {}
 
-    public Song(String title, boolean isPublicSong, String youtubeUrl) {
+    public Song(String title, boolean isPublicSong, String youtubeUrl, String imageUrl) {
         this.title = title;
         this.isPublicSong = isPublicSong;
         this.releaseDate = LocalDate.now();
         this.youtubeUrl = youtubeUrl;
+        this.imageUrl = imageUrl;
     }
 
     public String getYoutubeUrl() {
@@ -78,4 +81,13 @@ public class Song {
     public void setArtist(Artist artist) {
         this.artist = artist;
     }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
 }
+
