@@ -97,6 +97,14 @@ public class UserService {
         return userMapper.toResponse(savedUser);
     }
 
+    public List<UserResponse> findUsersByUsername(String username) {
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase(username);
+        if (users.isEmpty()) {
+            throw new UserNotFoundExeption("No se encontraron usuarios con el nombre de usuario: " + username);
+        }
+        return users.stream().map(userMapper::toResponse).toList();
+    }
+
     public AuthResponse login(LoginRequest request) {
         try {
             authManager.authenticate(
