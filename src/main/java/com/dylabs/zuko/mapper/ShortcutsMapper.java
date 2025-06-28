@@ -40,10 +40,13 @@ public class ShortcutsMapper {
     public AlbumResponse toAlbumResponse(Album album) {
         List<AlbumSongSummaryResponse> songs = album.getSongs().stream()
                 .map(song -> new AlbumSongSummaryResponse(
+                        song.getId(),          // Aquí se incluye el ID único de la canción
                         song.getTitle(),
-                        song.getReleaseDate()
+                        song.getReleaseDate(),
+                        song.getYoutubeUrl()
                 ))
                 .collect(Collectors.toList());
+
         return new AlbumResponse(
                 album.getId(),
                 album.getTitle(),

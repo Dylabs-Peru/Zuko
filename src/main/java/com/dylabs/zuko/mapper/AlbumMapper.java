@@ -52,8 +52,10 @@ public class AlbumMapper {
     public AlbumResponse toResponse(Album album) {
         List<AlbumSongSummaryResponse> songs = album.getSongs().stream()
                 .map(song -> new AlbumSongSummaryResponse(
+                        song.getId(),
                         song.getTitle(),
-                        song.getReleaseDate() // <-- Incluimos la fecha de lanzamiento
+                        song.getReleaseDate(),
+                        song.getYoutubeUrl()
                 ))
                 .collect(Collectors.toList());
 
