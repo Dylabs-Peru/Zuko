@@ -1,5 +1,11 @@
 package com.dylabs.zuko.dto.response;
 
+import java.time.LocalDate;
+
 public record AlbumSongSummaryResponse(
-        String title
+        Long id,
+        String title,
+        LocalDate releaseDate,
+        String youtubeUrl
 ) {}
+
