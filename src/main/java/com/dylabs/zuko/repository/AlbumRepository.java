@@ -22,4 +22,5 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
     List<Album> findAllByOrderByTitleAsc();
     @Query("SELECT a FROM Album a JOIN a.songs s WHERE s.id =:songId")
     Optional<Album> findAlbumBySongId(@Param("songId") Long songId);
+    List<Album> findAllByArtistId(Long artistId);
 }

@@ -122,6 +122,26 @@ public class AlbumService {
         return albums.stream().map(albumMapper::toResponse).collect(Collectors.toList());
     }
 
+    public List<AlbumResponse> getAlbumsByArtistId(Long artistId) {
+        // Verificar si el artista existe
+        if (!artistRepository.existsById(artistId)) {
+            throw new ArtistNotFoundException("Artista no encontrado con ID: " + artistId);
+        }
+
+        // Obtener los álbumes relacionados con el artista
+        List<Album> albums = albumRepository.findAllByArtistId(artistId);
+
+        // Si no se encuentran álbumes, devolver una lista vacía o lanzar excepción, según preferencia
+        if (albums.isEmpty()) {
+            throw new AlbumNotFoundException("No se encontraron álbumes para este artista.");
+        }
+
+        // Convertir las entidades de álbum a DTOs
+        return albums.stream()
+                .map(albumMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
 
     public AlbumResponse updateAlbum(Long id, AlbumRequest request, String userIdFromToken) {
         Album album = albumRepository.findById(id)
