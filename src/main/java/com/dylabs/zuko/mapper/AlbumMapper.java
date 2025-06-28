@@ -51,7 +51,10 @@ public class AlbumMapper {
 
     public AlbumResponse toResponse(Album album) {
         List<AlbumSongSummaryResponse> songs = album.getSongs().stream()
-                .map(song -> new AlbumSongSummaryResponse(song.getTitle()))
+                .map(song -> new AlbumSongSummaryResponse(
+                        song.getTitle(),
+                        song.getReleaseDate() // <-- Incluimos la fecha de lanzamiento
+                ))
                 .collect(Collectors.toList());
 
         return new AlbumResponse(
@@ -65,6 +68,7 @@ public class AlbumMapper {
                 songs
         );
     }
+
 
 
     public void updateAlbumFromRequest(Album album, AlbumRequest request, Genre genre, Artist artist) {

@@ -39,7 +39,10 @@ public class ShortcutsMapper {
     // cambiar por uno más óptimo
     public AlbumResponse toAlbumResponse(Album album) {
         List<AlbumSongSummaryResponse> songs = album.getSongs().stream()
-                .map(song -> new AlbumSongSummaryResponse(song.getTitle()))
+                .map(song -> new AlbumSongSummaryResponse(
+                        song.getTitle(),
+                        song.getReleaseDate()
+                ))
                 .collect(Collectors.toList());
         return new AlbumResponse(
                 album.getId(),
@@ -52,5 +55,6 @@ public class ShortcutsMapper {
                 songs
         );
     }
+
 
 }
