@@ -260,6 +260,14 @@ public class UserService {
         return userMapper.toResponse(updatedUser);
     }
 
+    public List<UserResponse> serchhUsersByUsername(String username) {
+        List<User> users = userRepository.findByUsernameContainingIgnoreCase(username);
+        if (users.isEmpty()) {
+            throw new UserNotFoundExeption("No se encontraron usuarios con el nombre de usuario: " + username);
+        }
+        return users.stream().map(userMapper::toResponse).toList();
+    }
+
 
     // Metodo Helper
 
@@ -268,6 +276,8 @@ public class UserService {
         return userRepository.findById(Long.parseLong(userId))
                 .orElseThrow(() -> new UserNotFoundExeption("Usuario autenticado no encontrado"));
     }
+
+
 
     // OAuth 2.0 Google Methods
 

@@ -66,6 +66,12 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<List<UserResponse>> searchUsersByUsername(@RequestParam String username) {
+        List<UserResponse> users = userService.serchhUsersByUsername(username);
+        return ResponseEntity.ok(users);
+    }
+
     // OAuth 2.0 Google Endpoints
 
     @PostMapping("/google/login")
