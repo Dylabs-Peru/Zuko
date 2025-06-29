@@ -67,6 +67,7 @@ public class AlbumMapper {
                 album.getArtist().getId(),
                 album.getArtist().getName(),
                 album.getGenre().getName(),
+                album.getGenre().getId(),
                 songs
         );
     }

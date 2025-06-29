@@ -15,15 +15,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ShortcutsMapper {
     public ShortcutsResponse toShortcutsResponse(Shortcuts shortcuts) {
-           return new ShortcutsResponse(
-                    shortcuts.getId(),
-                    shortcuts.getPlaylists().stream()
-                            .map(this::toPlaylistSummary)
-                            .collect(Collectors.toSet()),
-                    shortcuts.getAlbums().stream()
-                            .map(this::toAlbumResponse)
-                            .collect(Collectors.toSet())
-            );
+        return new ShortcutsResponse(
+                shortcuts.getId(),
+                shortcuts.getPlaylists().stream()
+                        .map(this::toPlaylistSummary)
+                        .collect(Collectors.toSet()),
+                shortcuts.getAlbums().stream()
+                        .map(this::toAlbumResponse)
+                        .collect(Collectors.toSet())
+        );
 
     }
 
@@ -40,7 +40,7 @@ public class ShortcutsMapper {
     public AlbumResponse toAlbumResponse(Album album) {
         List<AlbumSongSummaryResponse> songs = album.getSongs().stream()
                 .map(song -> new AlbumSongSummaryResponse(
-                        song.getId(),          // Aquí se incluye el ID único de la canción
+                        song.getId(),
                         song.getTitle(),
                         song.getReleaseDate(),
                         song.getYoutubeUrl()
@@ -55,9 +55,9 @@ public class ShortcutsMapper {
                 album.getArtist().getId(),
                 album.getArtist().getName(),
                 album.getGenre().getName(),
+                album.getGenre().getId(),
                 songs
         );
     }
-
 
 }
