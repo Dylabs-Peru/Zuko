@@ -10,4 +10,5 @@ public interface SongRepository extends JpaRepository<Song, Long> {
     boolean existsByTitleIgnoreCaseAndArtistId(String title, Long artistId);
     List<Song> findByTitleContainingIgnoreCaseAndIsPublicSongTrue(String title);
     List<Song> findAllByArtistId(Long artistId);
+    List<Song> findAll();
 }

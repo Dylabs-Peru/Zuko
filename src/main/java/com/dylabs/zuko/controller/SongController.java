@@ -69,4 +69,11 @@ public class SongController {
         String username = authentication.getName();
         return songService.deleteSong(id, username);
     }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<SongResponse>> getAllSongs() {
+        List<SongResponse> songs = songService.getAllSongs();
+        return ResponseEntity.ok(songs);
+    }
 }

@@ -29,6 +29,7 @@ public class SongService {
     private final SongMapper songMapper;
     private final ArtistRepository artistRepository;
     private final UserRepository userRepository;
+    private final SongRepository songRepository;
 
     // Crear canción
     public SongResponse createSong(SongRequest request, String userIdFromToken) {
@@ -87,6 +88,13 @@ public class SongService {
             throw new SongNotFoundException("No existe la canción buscada.");
         }
 
+        return songs.stream()
+                .map(songMapper::toResponse)
+                .toList();
+    }
+
+    public List<SongResponse> getAllSongs() {
+        List<Song> songs = songRepository.findAll();
         return songs.stream()
                 .map(songMapper::toResponse)
                 .toList();
