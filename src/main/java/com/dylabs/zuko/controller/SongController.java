@@ -76,4 +76,10 @@ public class SongController {
         List<SongResponse> songs = songService.getAllSongs();
         return ResponseEntity.ok(songs);
     }
+
+    @GetMapping("/top3-today")
+    public ResponseEntity<List<SongResponse>> getTop3PublicSongsToday() {
+        List<SongResponse> songs = songService.getTop3PublicSongsToday();
+        return ResponseEntity.ok(songs);
+    }
 }
