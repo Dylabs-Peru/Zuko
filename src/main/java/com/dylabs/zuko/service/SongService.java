@@ -5,6 +5,7 @@ import com.dylabs.zuko.dto.response.SongResponse;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
 import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
+import com.dylabs.zuko.exception.songExceptions.SongNotPublicException;
 import com.dylabs.zuko.mapper.SongMapper;
 import com.dylabs.zuko.model.Artist;
 import com.dylabs.zuko.model.Song;
@@ -18,6 +19,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -177,6 +179,14 @@ public class SongService {
 
     public List<SongResponse> getSongsByArtistId(Long artistId) {
         return repository.findAllByArtistId(artistId).stream()
+                .map(songMapper::toResponse)
+                .toList();
+    }
+
+    public List<SongResponse> getTop3PublicSongsToday() {
+        LocalDate today = LocalDate.now();
+        List<Song> songs = songRepository.findTop3ByIsPublicSongTrueAndReleaseDateOrderByIdDesc(today);
+        return songs.stream()
                 .map(songMapper::toResponse)
                 .toList();
     }
