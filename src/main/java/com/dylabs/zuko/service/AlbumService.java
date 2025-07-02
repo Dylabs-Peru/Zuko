@@ -1,6 +1,7 @@
 package com.dylabs.zuko.service;
 
 import com.dylabs.zuko.dto.request.AlbumRequest;
+import com.dylabs.zuko.dto.request.SongRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
 import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
@@ -40,6 +41,13 @@ public class AlbumService {
     private final SongMapper songMapper;
     private final UserRepository userRepository;
 
+    // Método reutilizable para validar que todas las canciones sean públicas
+    private void validatePublicSongs(List<SongRequest> songs) {
+        boolean allSongsArePublic = songs.stream().allMatch(SongRequest::isPublicSong);
+        if (!allSongsArePublic) {
+            throw new AlbumValidationException("Solo las canciones públicas pueden asociarse a álbumes.");
+        }
+    }
 
     public AlbumResponse createAlbum(AlbumRequest request, String userIdFromToken) {
         User user = userRepository.findById(Long.parseLong(userIdFromToken))
@@ -47,15 +55,12 @@ public class AlbumService {
 
         Artist artist;
         if ("ADMIN".equalsIgnoreCase(user.getUserRoleName())) {
-
             if (request.artistId() == null) {
                 throw new AlbumValidationException("El campo artistId es obligatorio para administradores.");
             }
-
             artist = artistRepository.findById(request.artistId())
                     .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + request.artistId()));
         } else {
-            // Manejo para artistas regulares
             artist = artistRepository.findByUserId(user.getId())
                     .orElseThrow(() -> new ArtistNotFoundException("No tienes un perfil de artista."));
         }
@@ -71,6 +76,9 @@ public class AlbumService {
             throw new AlbumValidationException("El álbum debe contener al menos dos canciones.");
         }
 
+        // Validar que todas las canciones sean públicas
+        validatePublicSongs(request.songs());
+
         List<Song> persistedSongs = request.songs().stream()
                 .map(songRequest -> {
                     Song existingSong = songRepository.findByTitleContainingIgnoreCaseAndIsPublicSongTrue(songRequest.title())
@@ -80,7 +88,6 @@ public class AlbumService {
                             .orElse(null);
 
                     if (existingSong == null) {
-
                         Song newSong = new Song();
                         newSong.setTitle(songRequest.title());
                         newSong.setPublicSong(songRequest.isPublicSong());
@@ -106,19 +113,40 @@ public class AlbumService {
 
 
 
+
     public AlbumResponse getAlbumById(Long id) {
         Album album = albumRepository.findById(id)
                 .orElseThrow(() -> new AlbumNotFoundException("Álbum no disponible."));
+
+        // Filtrar canciones públicas antes de devolver el álbum
+        album.setSongs(
+                album.getSongs().stream()
+                        .filter(Song::isPublicSong) // Mantener solo canciones públicas
+                        .collect(Collectors.toList())
+        );
+
         return albumMapper.toResponse(album);
     }
 
+
     public List<AlbumResponse> getAlbumsByTitle(String title) {
         List<Album> albums = albumRepository.findAllByTitleContainingIgnoreCase(title);
+
         if (albums.isEmpty()) {
             throw new AlbumNotFoundException("No se encontraron álbumes con el título especificado.");
         }
+
+        // Filtrar las canciones públicas en cada álbum
+        albums.forEach(album ->
+                album.setSongs(album.getSongs().stream()
+                        .filter(Song::isPublicSong) // Mantener solo canciones públicas
+                        .collect(Collectors.toList())
+                )
+        );
+
         return albums.stream().map(albumMapper::toResponse).collect(Collectors.toList());
     }
+
 
     public List<AlbumResponse> getAlbumsByTitleAndUser(String title, String userIdFromToken) {
         User user = userRepository.findById(Long.parseLong(userIdFromToken))
@@ -143,7 +171,6 @@ public class AlbumService {
     }
 
     public List<AlbumResponse> getAlbumsByArtistId(Long artistId) {
-
         if (!artistRepository.existsById(artistId)) {
             throw new ArtistNotFoundException("Artista no encontrado con ID: " + artistId);
         }
@@ -154,81 +181,82 @@ public class AlbumService {
             throw new AlbumNotFoundException("No se encontraron álbumes para este artista.");
         }
 
-        return albums.stream()
-                .map(albumMapper::toResponse)
-                .collect(Collectors.toList());
+        // Filtrar las canciones públicas en cada álbum
+        albums.forEach(album ->
+                album.setSongs(album.getSongs().stream()
+                        .filter(Song::isPublicSong) // Mantener solo canciones públicas
+                        .collect(Collectors.toList())
+                )
+        );
+
+        return albums.stream().map(albumMapper::toResponse).collect(Collectors.toList());
     }
 
 
 
 
     public AlbumResponse updateAlbum(Long id, AlbumRequest request, String userIdFromToken) {
-        try {
+        Album album = albumRepository.findById(id)
+                .orElseThrow(() -> new AlbumNotFoundException("Álbum no disponible."));
 
-            Album album = albumRepository.findById(id)
-                    .orElseThrow(() -> new AlbumNotFoundException("Álbum no disponible."));
+        User user = userRepository.findById(Long.parseLong(userIdFromToken))
+                .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado"));
 
-            User user = userRepository.findById(Long.parseLong(userIdFromToken))
-                    .orElseThrow(() -> new ArtistNotFoundException("Usuario no encontrado"));
-
-            Artist artist;
-            if ("ADMIN".equalsIgnoreCase(user.getUserRoleName()) && request.artistId() != null) {
-                artist = artistRepository.findById(request.artistId())
-                        .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + request.artistId()));
-            } else {
-                artist = artistRepository.findByUserId(user.getId())
-                        .orElseThrow(() -> new ArtistNotFoundException("No tienes un perfil de artista."));
-                if (!album.getArtist().getId().equals(artist.getId())) {
-                    throw new AccessDeniedException("No puedes modificar este álbum.");
-                }
+        Artist artist;
+        if ("ADMIN".equalsIgnoreCase(user.getUserRoleName()) && request.artistId() != null) {
+            artist = artistRepository.findById(request.artistId())
+                    .orElseThrow(() -> new ArtistNotFoundException("Artista no encontrado con ID: " + request.artistId()));
+        } else {
+            artist = artistRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new ArtistNotFoundException("No tienes un perfil de artista."));
+            if (!album.getArtist().getId().equals(artist.getId())) {
+                throw new AccessDeniedException("No puedes modificar este álbum.");
             }
-
-            Genre genre = genreRepository.findById(request.genreId())
-                    .orElseThrow(() -> new GenreNotFoundException("El género no fue encontrado."));
-
-            if (albumRepository.existsByTitleIgnoreCaseAndArtistIdAndIdNot(request.title(), artist.getId(), id)) {
-                throw new AlbumAlreadyExistsException("El título del álbum ya existe para este artista.");
-            }
-
-            if (request.songs().size() < 2) {
-                throw new AlbumValidationException("El álbum debe contener al menos dos canciones.");
-            }
-
-            List<Song> persistedSongs = request.songs().stream()
-                    .map(songRequest -> {
-
-                        Song existingSong = songRepository.findByTitleContainingIgnoreCaseAndIsPublicSongTrue(songRequest.title())
-                                .stream()
-                                .filter(s -> s.getArtist().getId().equals(artist.getId()))
-                                .findFirst()
-                                .orElse(null);
-
-                        if (existingSong == null) {
-                            Song newSong = new Song();
-                            newSong.setTitle(songRequest.title());
-                            newSong.setPublicSong(songRequest.isPublicSong());
-                            newSong.setReleaseDate(LocalDate.now());
-                            newSong.setArtist(artist);
-                            newSong.setImageUrl(songRequest.imageUrl());
-                            newSong.setYoutubeUrl(songRequest.youtubeUrl());
-                            return songRepository.save(newSong);
-                        }
-
-                        return existingSong;
-                    })
-                    .collect(Collectors.toList());
-
-            albumMapper.updateAlbumFromRequest(album, request, genre, artist);
-
-            album.setSongs(persistedSongs);
-
-            albumRepository.save(album);
-
-            return albumMapper.toResponse(album);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            throw new RuntimeException("Ocurrió un error inesperado al actualizar el álbum.");
         }
+
+        Genre genre = genreRepository.findById(request.genreId())
+                .orElseThrow(() -> new GenreNotFoundException("El género no fue encontrado."));
+
+        if (albumRepository.existsByTitleIgnoreCaseAndArtistIdAndIdNot(request.title(), artist.getId(), id)) {
+            throw new AlbumAlreadyExistsException("El título del álbum ya existe para este artista.");
+        }
+
+        if (request.songs().size() < 2) {
+            throw new AlbumValidationException("El álbum debe contener al menos dos canciones.");
+        }
+
+        // Validar que todas las canciones sean públicas
+        validatePublicSongs(request.songs());
+
+        List<Song> persistedSongs = request.songs().stream()
+                .map(songRequest -> {
+
+                    Song existingSong = songRepository.findByTitleContainingIgnoreCaseAndIsPublicSongTrue(songRequest.title())
+                            .stream()
+                            .filter(s -> s.getArtist().getId().equals(artist.getId()))
+                            .findFirst()
+                            .orElse(null);
+
+                    if (existingSong == null) {
+                        Song newSong = new Song();
+                        newSong.setTitle(songRequest.title());
+                        newSong.setPublicSong(songRequest.isPublicSong());
+                        newSong.setReleaseDate(LocalDate.now());
+                        newSong.setArtist(artist);
+                        newSong.setImageUrl(songRequest.imageUrl());
+                        newSong.setYoutubeUrl(songRequest.youtubeUrl());
+                        return songRepository.save(newSong);
+                    }
+
+                    return existingSong;
+                })
+                .collect(Collectors.toList());
+
+        albumMapper.updateAlbumFromRequest(album, request, genre, artist);
+        album.setSongs(persistedSongs);
+        album = albumRepository.save(album);
+
+        return albumMapper.toResponse(album);
     }
 
 
