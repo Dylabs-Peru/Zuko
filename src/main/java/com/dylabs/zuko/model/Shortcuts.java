@@ -26,9 +26,13 @@ public class Shortcuts {
     @JoinTable(
             name = "shortcuts_albums",
             joinColumns = @JoinColumn(name = "shortcuts_id"),
-            inverseJoinColumns = @JoinColumn(name = "album_id")
-            // aplicar casacade aqui tmb
-
+            inverseJoinColumns = @JoinColumn(
+                    name = "album_id",
+                    foreignKey = @ForeignKey(
+                            name = "fk_album",
+                            foreignKeyDefinition = "FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE"
+                    )
+            )
     )
     private Set<Album> albums = new HashSet<>();
 

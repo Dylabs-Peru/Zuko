@@ -3,6 +3,7 @@ package com.dylabs.zuko.controller;
 import com.dylabs.zuko.dto.ApiResponse;
 import com.dylabs.zuko.dto.request.AddPlaylistToShortcutsRequest;
 import com.dylabs.zuko.dto.response.ShortcutsResponse;
+import com.dylabs.zuko.model.Album;
 import com.dylabs.zuko.service.ShortcutsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -10,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("shortcuts")
@@ -40,4 +41,28 @@ public class ShortcutsController {
         ShortcutsResponse response = shortcutsService.getShortcutsByUser(userId);
         return ResponseEntity.ok(new ApiResponse<>("Shortcuts de accesos directos", response));
     }
+
+    @PostMapping("/albums")
+    public ResponseEntity<Object> addAlbumToShortcuts(@RequestParam Long albumId, Authentication authentication) {
+        String userId = authentication.getName();
+        shortcutsService.addAlbumToUserShortcuts(Long.parseLong(userId), albumId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                new ApiResponse<>("Álbum agregado a accesos directos", null));
+    }
+
+    @DeleteMapping("/albums/{albumId}")
+    public ResponseEntity<Object> removeAlbumFromShortcuts(@PathVariable Long albumId, Authentication authentication) {
+        String userId = authentication.getName();
+        shortcutsService.removeAlbumFromUserShortcuts(Long.parseLong(userId), albumId);
+        return ResponseEntity.ok(new ApiResponse<>("Álbum eliminado de accesos directos", null));
+    }
+
+    @GetMapping("/albums")
+    public ResponseEntity<Object> getUserShortcutsAlbums(Authentication authentication) {
+        String userId = authentication.getName();
+        Set<Album> albums = shortcutsService.getUserShortcutsAlbums(Long.parseLong(userId));
+        return ResponseEntity.ok(new ApiResponse<>("Álbumes en accesos directos", albums));
+    }
+
+
 }
