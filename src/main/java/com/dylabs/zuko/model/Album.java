@@ -27,8 +27,12 @@ public class Album {
     @JoinColumn(name = "artist_id")
     private Artist artist;
 
-    @OneToMany
-    @JoinColumn(name = "album_id")
+    @ManyToMany
+    @JoinTable(
+            name = "album_songs",
+            joinColumns = @JoinColumn(name = "album_id"),
+            inverseJoinColumns = @JoinColumn(name = "song_id")
+    )
     private List<Song> songs = new ArrayList<>();
 
     @ManyToOne(optional = false)
@@ -38,6 +42,7 @@ public class Album {
     private LocalDate releaseDate;
 
     private LocalDate creationDate;
+
 
     // Getters
 
