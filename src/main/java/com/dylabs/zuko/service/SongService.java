@@ -183,9 +183,8 @@ public class SongService {
                 .toList();
     }
 
-    public List<SongResponse> getTop3PublicSongsToday() {
-        LocalDate today = LocalDate.now();
-        List<Song> songs = songRepository.findTop3ByIsPublicSongTrueAndReleaseDateOrderByIdDesc(today);
+    public List<SongResponse> getTop3PublicSongs() {
+        List<Song> songs = songRepository.findTop3ByIsPublicSongTrueOrderByIdDesc();
         return songs.stream()
                 .map(songMapper::toResponse)
                 .toList();
