@@ -1,6 +1,7 @@
 package com.dylabs.zuko.service;
 
 import com.dylabs.zuko.dto.request.SongRequest;
+import com.dylabs.zuko.dto.response.ReleaseItemResponse;
 import com.dylabs.zuko.dto.response.SongResponse;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
@@ -187,6 +188,24 @@ public class SongService {
         List<Song> songs = songRepository.findTop3ByIsPublicSongTrueOrderByIdDesc();
         return songs.stream()
                 .map(songMapper::toResponse)
+                .toList();
+    }
+
+    public List<ReleaseItemResponse> getTop3PublicSongsAsReleases() {
+        // Obtiene las canciones públicas más recientes del repositorio existente
+        List<Song> songs = songRepository.findTop3ByIsPublicSongTrueOrderByIdDesc();
+
+        // Convierte cada canción en un ReleaseItemResponse
+        return songs.stream()
+                .map(song -> new ReleaseItemResponse(
+                        song.getId(),
+                        song.getTitle(),
+                        "song", // Indica que este objeto es de tipo canción
+                        song.getArtist().getName(),
+                        song.getImageUrl(),
+                        song.getYoutubeUrl(), // Sólo canciones tienen YouTube URL
+                        song.getReleaseDate()
+                ))
                 .toList();
     }
 }

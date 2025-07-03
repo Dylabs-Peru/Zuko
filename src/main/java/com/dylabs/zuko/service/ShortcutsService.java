@@ -15,6 +15,10 @@ import com.dylabs.zuko.repository.ShortcutsRepository;
 import com.dylabs.zuko.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.dylabs.zuko.model.Album;
+import com.dylabs.zuko.repository.AlbumRepository;
+
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,7 @@ public class ShortcutsService {
     private final UserRepository userRepository;
     private final PlaylistRepository playlistRepository;
     private final ShortcutsMapper shortcutsMapper;
+    private final AlbumRepository albumRepository;
 
     public void addPlaylistToShortcuts(String userId, AddPlaylistToShortcutsRequest request) {
         User user = userRepository.findById(Long.parseLong(userId))
@@ -62,4 +67,43 @@ public class ShortcutsService {
                 .orElseThrow(()->new UserNotFoundExeption("Shortcut no encontrado para usuario con id:" + userId));
         return shortcutsMapper.toShortcutsResponse(shortcuts);
     }
+
+    public void addAlbumToUserShortcuts(Long userId, Long albumId) {
+        Shortcuts shortcuts = shortcutsRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontraron accesos directos para el usuario con ID: " + userId));
+
+        if (shortcutsRepository.existsByUser_IdAndAlbums_Id(userId, albumId)) {
+            throw new IllegalStateException("El álbum ya está en los accesos directos");
+        }
+
+        Album album = albumRepository.findById(albumId)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró un álbum con ID: " + albumId));
+
+        shortcuts.getAlbums().add(album); // Asocia el álbum a los accesos directos
+        shortcutsRepository.save(shortcuts);
+    }
+
+    // Metodo para eliminar un álbum de los accesos directos de un usuario
+    public void removeAlbumFromUserShortcuts(Long userId, Long albumId) {
+        Shortcuts shortcuts = shortcutsRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontraron accesos directos para el usuario con ID: " + userId));
+
+        Album album = albumRepository.findById(albumId)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontró un álbum con ID: " + albumId));
+
+        if (!shortcuts.getAlbums().contains(album)) {
+            throw new IllegalStateException("El álbum no está en los accesos directos");
+        }
+        shortcuts.getAlbums().remove(album);
+        shortcutsRepository.save(shortcuts);
+    }
+
+    // Metodo para listar los álbumes de los accesos directos de un usuario
+    public Set<Album> getUserShortcutsAlbums(Long userId) {
+        Shortcuts shortcuts = shortcutsRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new IllegalArgumentException("No se encontraron accesos directos para el usuario con ID: " + userId));
+
+        return shortcuts.getAlbums();
+    }
+
 }

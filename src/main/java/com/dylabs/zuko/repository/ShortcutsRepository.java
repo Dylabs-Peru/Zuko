@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface ShortcutsRepository extends JpaRepository<Shortcuts, Long> {
     Optional<Shortcuts> findByUser_Id(Long userId);
     boolean existsByUser_IdAndPlaylists_PlaylistId(Long userId, Long playlistId);
+    boolean existsByUser_IdAndAlbums_Id(Long userId, Long albumId);
 }
