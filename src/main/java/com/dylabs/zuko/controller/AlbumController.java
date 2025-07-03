@@ -82,6 +82,12 @@ public class AlbumController {
     }
 
 
+    @GetMapping("/by-artist/{artistId}")
+    public ResponseEntity<List<AlbumResponse>> getAlbumsByArtist(@PathVariable Long artistId) {
+        return ResponseEntity.ok(albumService.getAlbumsByArtistId(artistId));
+    }
+
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ResponseEntity<Object> updateAlbum(@PathVariable Long id, @RequestBody @Valid AlbumRequest request, Authentication authentication) {

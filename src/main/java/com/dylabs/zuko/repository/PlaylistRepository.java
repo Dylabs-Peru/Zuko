@@ -16,8 +16,9 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
 
     List<Playlist> findAllByUser_Id(Long userId);
 
-    Optional<Playlist> findByNameIgnoreCase(String name);
-
     List<Playlist> findByisPublicTrueAndNameContainingIgnoreCase(String name);
+
+    List<Playlist> findByUser_IdAndNameContainingIgnoreCase(Long userId, String name);
+
 
 }

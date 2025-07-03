@@ -7,7 +7,6 @@ import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
 import com.dylabs.zuko.model.Playlist;
 import com.dylabs.zuko.model.Song;
 import com.dylabs.zuko.repository.SongRepository;
-import com.dylabs.zuko.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import java.util.Set;
@@ -18,7 +17,6 @@ import java.util.stream.Collectors;
 public class PlaylistMapper {
 
     private final SongRepository songRepository;
-    private final UserRepository userRepository;
 
     public PlaylistResponse toResponse(Playlist playlist) {
         PlaylistResponse playlistResponse = new PlaylistResponse(
@@ -54,7 +52,8 @@ public class PlaylistMapper {
                 null,
                 song.getArtist().getId(),
                 song.getArtist().getName(),
-                song.getYoutubeUrl()
+                song.getYoutubeUrl(),
+                song.getImageUrl()
 
         );
     }

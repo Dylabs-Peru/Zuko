@@ -2,6 +2,7 @@ package com.dylabs.zuko.controller;
 
 import com.dylabs.zuko.dto.ApiResponse;
 import com.dylabs.zuko.dto.request.CreateUserRequest;
+import com.dylabs.zuko.dto.request.GoogleOAuthRequest;
 import com.dylabs.zuko.dto.request.LoginRequest;
 import com.dylabs.zuko.dto.request.UpdateUserRequest;
 import com.dylabs.zuko.dto.response.AuthResponse;
@@ -63,5 +64,25 @@ public class UserController {
     public ResponseEntity<UserResponse> getUserByUsername(@PathVariable String username) {
         UserResponse response = userService.getUserByUsername(username);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<UserResponse>> searchUsersByUsername(@RequestParam String username) {
+        List<UserResponse> users = userService.serchhUsersByUsername(username);
+        return ResponseEntity.ok(users);
+    }
+
+    // OAuth 2.0 Google Endpoints
+
+    @PostMapping("/google/login")
+    public ResponseEntity<AuthResponse> loginWithGoogle(@Valid @RequestBody GoogleOAuthRequest request) {
+        AuthResponse response = userService.loginWithGoogle(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/google/register")
+    public ResponseEntity<ApiResponse<AuthResponse>> registerWithGoogle(@Valid @RequestBody GoogleOAuthRequest request) {
+        AuthResponse response = userService.registerWithGoogle(request);
+        return new ResponseEntity<>(new ApiResponse<>("Usuario registrado exitosamente con Google", response), HttpStatus.CREATED);
     }
 }

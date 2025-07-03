@@ -1,10 +1,12 @@
 package com.dylabs.zuko.service;
 
 import com.dylabs.zuko.dto.request.SongRequest;
+import com.dylabs.zuko.dto.response.ReleaseItemResponse;
 import com.dylabs.zuko.dto.response.SongResponse;
 import com.dylabs.zuko.exception.artistExeptions.ArtistNotFoundException;
 import com.dylabs.zuko.exception.songExceptions.SongAlreadyExistException;
 import com.dylabs.zuko.exception.songExceptions.SongNotFoundException;
+import com.dylabs.zuko.exception.songExceptions.SongNotPublicException;
 import com.dylabs.zuko.mapper.SongMapper;
 import com.dylabs.zuko.model.Artist;
 import com.dylabs.zuko.model.Song;
@@ -18,6 +20,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -29,6 +32,7 @@ public class SongService {
     private final SongMapper songMapper;
     private final ArtistRepository artistRepository;
     private final UserRepository userRepository;
+    private final SongRepository songRepository;
 
     // Crear canción
     public SongResponse createSong(SongRequest request, String userIdFromToken) {
@@ -74,6 +78,12 @@ public class SongService {
                 .toList();
     }
 
+    public SongResponse getSongById(Long id) {
+        Song song = repository.findById(id)
+                .orElseThrow(() -> new SongNotFoundException("Canción no encontrada con ID: " + id));
+        return songMapper.toResponse(song);
+    }
+
     public List<SongResponse> searchPublicSongsByTitle(String title) {
         var songs = repository.findByTitleContainingIgnoreCaseAndIsPublicSongTrue(title);
 
@@ -81,6 +91,13 @@ public class SongService {
             throw new SongNotFoundException("No existe la canción buscada.");
         }
 
+        return songs.stream()
+                .map(songMapper::toResponse)
+                .toList();
+    }
+
+    public List<SongResponse> getAllSongs() {
+        List<Song> songs = songRepository.findAll();
         return songs.stream()
                 .map(songMapper::toResponse)
                 .toList();
@@ -110,6 +127,8 @@ public class SongService {
 
         song.setTitle(request.title());
         song.setPublicSong(request.isPublicSong());
+        song.setYoutubeUrl(request.youtubeUrl());
+        song.setImageUrl(request.imageUrl());
 
         Song updated = repository.save(song);
 
@@ -121,7 +140,8 @@ public class SongService {
                 "La canción ha sido actualizada correctamente.",
                 updated.getArtist().getId(),
                 updated.getArtist().getName(),
-                updated.getYoutubeUrl()
+                updated.getYoutubeUrl(),
+                updated.getImageUrl()
 
         );
     }
@@ -152,8 +172,40 @@ public class SongService {
                 "La canción ha sido eliminada correctamente.",
                 song.getArtist().getId(),
                 song.getArtist().getName(),
-                song.getYoutubeUrl()
+                song.getYoutubeUrl(),
+                song.getImageUrl()
 
         );
+    }
+
+    public List<SongResponse> getSongsByArtistId(Long artistId) {
+        return repository.findAllByArtistId(artistId).stream()
+                .map(songMapper::toResponse)
+                .toList();
+    }
+
+    public List<SongResponse> getTop3PublicSongs() {
+        List<Song> songs = songRepository.findTop3ByIsPublicSongTrueOrderByIdDesc();
+        return songs.stream()
+                .map(songMapper::toResponse)
+                .toList();
+    }
+
+    public List<ReleaseItemResponse> getTop3PublicSongsAsReleases() {
+        // Obtiene las canciones públicas más recientes del repositorio existente
+        List<Song> songs = songRepository.findTop3ByIsPublicSongTrueOrderByIdDesc();
+
+        // Convierte cada canción en un ReleaseItemResponse
+        return songs.stream()
+                .map(song -> new ReleaseItemResponse(
+                        song.getId(),
+                        song.getTitle(),
+                        "song", // Indica que este objeto es de tipo canción
+                        song.getArtist().getName(),
+                        song.getImageUrl(),
+                        song.getYoutubeUrl(), // Sólo canciones tienen YouTube URL
+                        song.getReleaseDate()
+                ))
+                .toList();
     }
 }

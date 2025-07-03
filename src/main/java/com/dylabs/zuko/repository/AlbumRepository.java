@@ -1,7 +1,11 @@
 package com.dylabs.zuko.repository;
 
 import com.dylabs.zuko.model.Album;
+import com.dylabs.zuko.model.Song;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -22,4 +26,7 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
     List<Album> findAllByOrderByTitleAsc();
     @Query("SELECT a FROM Album a JOIN a.songs s WHERE s.id =:songId")
     Optional<Album> findAlbumBySongId(@Param("songId") Long songId);
+    List<Album> findAllByArtistId(Long artistId);
+
+    List<Album> findTop3ByOrderByIdDesc();
 }

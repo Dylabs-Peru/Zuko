@@ -10,5 +10,6 @@ public record SongResponse(
         String message,
         Long artistId,
         String artistName,
-        String youtubeUrl
+        String youtubeUrl,
+        String imageUrl
 ) {}

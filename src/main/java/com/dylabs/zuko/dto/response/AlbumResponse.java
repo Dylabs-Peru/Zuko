@@ -10,5 +10,6 @@ public record AlbumResponse(
         Long artistId,
         String artistName,
         String genreName,
+        Long genreId,
         List<AlbumSongSummaryResponse> songs
 ) {}

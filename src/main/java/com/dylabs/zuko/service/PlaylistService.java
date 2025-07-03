@@ -206,6 +206,15 @@ public class PlaylistService {
 
     }
 
+    public List<PlaylistResponse> searchMyPlaylistsByName(String userId, String name) {
+        List<Playlist> playlists = playlistRepository
+                .findByUser_IdAndNameContainingIgnoreCase(Long.parseLong(userId), name);
+        return playlists.stream()
+                .map(playlistMapper::toResponse)
+                .toList();
+    }
+
+
 
 
 

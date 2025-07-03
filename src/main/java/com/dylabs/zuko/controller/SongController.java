@@ -45,10 +45,22 @@ public class SongController {
         return ResponseEntity.ok(songs);
     }
 
+    @GetMapping("/by-artist")
+    public ResponseEntity<List<SongResponse>> getSongs(@RequestParam Long artistId) {
+        List<SongResponse> songs = songService.getSongsByArtistId(artistId);
+        return ResponseEntity.ok(songs);
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<SongResponse>> searchSongs(@RequestParam String title) {
         List<SongResponse> songs = songService.searchPublicSongsByTitle(title);
         return ResponseEntity.ok(songs);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<SongResponse> getSongById(@PathVariable Long id) {
+        SongResponse song = songService.getSongById(id);
+        return ResponseEntity.ok(song);
     }
 
     @DeleteMapping("/{id}")
@@ -56,5 +68,18 @@ public class SongController {
     public SongResponse deleteSong(@PathVariable Long id, Authentication authentication) {
         String username = authentication.getName();
         return songService.deleteSong(id, username);
+    }
+
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<SongResponse>> getAllSongs() {
+        List<SongResponse> songs = songService.getAllSongs();
+        return ResponseEntity.ok(songs);
+    }
+
+    @GetMapping("/top3-latest")
+    public ResponseEntity<List<SongResponse>> getTop3PublicSongs() {
+        List<SongResponse> songs = songService.getTop3PublicSongs();
+        return ResponseEntity.ok(songs);
     }
 }
