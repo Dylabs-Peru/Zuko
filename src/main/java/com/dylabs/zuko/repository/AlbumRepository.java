@@ -28,6 +28,5 @@ public interface AlbumRepository extends JpaRepository<Album, Long> {
     Optional<Album> findAlbumBySongId(@Param("songId") Long songId);
     List<Album> findAllByArtistId(Long artistId);
 
-    @Query("SELECT a FROM Album a WHERE a.releaseDate = CURRENT_DATE ORDER BY a.releaseDate DESC, a.id DESC")
-    Page<Album> findTopByReleaseDateToday(Pageable pageable);
+    List<Album> findTop3ByOrderByIdDesc();
 }
