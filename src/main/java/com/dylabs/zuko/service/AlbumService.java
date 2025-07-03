@@ -292,9 +292,10 @@ public class AlbumService {
     }
 
     public List<ReleaseItemResponse> getTop3PublicAlbums() {
-        Pageable limit = PageRequest.of(0, 3); // Página 0, máximo 3 resultados
-        List<Album> albums = albumRepository.findTopByReleaseDateToday(limit).getContent();
+        // Obtenemos los 3 últimos álbumes
+        List<Album> albums = albumRepository.findTop3ByOrderByIdDesc();
 
+        // Convertimos los álbumes al formato esperado
         return albums.stream()
                 .map(album -> new ReleaseItemResponse(
                         album.getId(),
