@@ -3,6 +3,7 @@ package com.dylabs.zuko.service;
 import com.dylabs.zuko.dto.request.AlbumRequest;
 import com.dylabs.zuko.dto.request.SongRequest;
 import com.dylabs.zuko.dto.response.AlbumResponse;
+import com.dylabs.zuko.dto.response.ReleaseItemResponse;
 import com.dylabs.zuko.exception.albumExceptions.AlbumAlreadyExistsException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumNotFoundException;
 import com.dylabs.zuko.exception.albumExceptions.AlbumPermissionException;
@@ -22,6 +23,8 @@ import com.dylabs.zuko.repository.GenreRepository;
 import com.dylabs.zuko.repository.SongRepository;
 import com.dylabs.zuko.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
@@ -288,5 +291,20 @@ public class AlbumService {
         return albumMapper.toResponse(album);
     }
 
+    public List<ReleaseItemResponse> getTop3PublicAlbums() {
+        Pageable limit = PageRequest.of(0, 3); // Página 0, máximo 3 resultados
+        List<Album> albums = albumRepository.findTopByReleaseDateToday(limit).getContent();
 
+        return albums.stream()
+                .map(album -> new ReleaseItemResponse(
+                        album.getId(),
+                        album.getTitle(),
+                        "album",
+                        album.getArtist().getName(),
+                        album.getCover(),
+                        null, // No aplica youtubeUrl para álbumes
+                        album.getReleaseDate()
+                ))
+                .toList();
+    }
 }
